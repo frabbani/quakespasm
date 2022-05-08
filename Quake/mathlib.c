@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // mathlib.c -- math primitives
 
 #include "quakedef.h"
+#include "vec.h"
 
 vec3_t vec3_origin = {0,0,0};
 
@@ -498,3 +499,92 @@ fixed16_t Invert24To16(fixed16_t val)
 			(((double)0x10000 * (double)0x1000000 / (double)val) + 0.5);
 }
 
+
+// FXR
+
+frameref_t frameref( const vec3 p, const vec3 angles ){
+	frameref_t ref = {{0}};
+
+	v3copy( ref.angles, angles );
+	AngleVectors( ref.angles, ref.f, ref.r, ref.u );
+	v3muls( ref.r, -1.0f );
+
+	v3copy( ref.p, p );
+	ref.p_loc[0] = v3dot( ref.p, ref.xyz[0] );
+	ref.p_loc[1] = v3dot( ref.p, ref.xyz[1] );
+	ref.p_loc[2] = v3dot( ref.p, ref.xyz[2] );
+	return ref;
+}
+
+
+void frameref_local( const frameref_t *ref, vec3 p ){
+	vec3 d;
+	v3make( d, ref->p, p );
+	p[0] = v3dot( d, ref->xyz[0] );
+	p[1] = v3dot( d, ref->xyz[1] );
+	p[2] = v3dot( d, ref->xyz[2] );
+}
+
+void frameref_world( const frameref_t *ref, vec3 p ){
+	vec3 xyz[3];
+
+	for( int32 i = 0; i < 3; i++ ){
+		v3copy( xyz[i], ref->xyz[i] );
+		v3muls( xyz[i], p[i] );
+	}
+
+	v3copy( p, ref->p );
+	for( int32 i = 0; i < 3; i++ )
+		v3add( p, xyz[i] );
+
+}
+
+void frameref_world_dir( const frameref_t *ref, vec3 d ){
+	vec3 xyz[3];
+
+	for( int32 i = 0; i < 3; i++ ){
+		v3copy( xyz[i], ref->xyz[i] );
+		v3muls( xyz[i], d[i] );
+	}
+
+	v3zero( d );
+	for( int32 i = 0; i < 3; i++ )
+		v3add( d, xyz[i] );
+}
+
+/*
+void ray_make( ray_t *ray, vec3_t v1, vec3_t v2 ){
+	VectorCopy( v1, ray->vs[0] );
+	VectorCopy( v2, ray->vs[1] );
+	MakeVector( ray->vs[0], ray->vs[1], ray->d );
+	ray->len = VectorNormalize( ray->d );
+}
+
+
+//assumes ray length > 0
+qboolean plane_ray_hit( const vec3_t plane_n, float plane_dist, const ray_t *ray, vec3_t v ){
+	const float grazing = 0.0349f;	//~2 degs grazing angle (sin(~2))
+	//assume len > 0.0f;
+	float ndotd, v1dotn, alpha;
+
+	ndotd = DotProduct( plane_n, ray->d );
+	if( fabsf( ndotd ) < grazing )	//assume not touching at grazing angle
+		return false;
+
+	//      dot( (v1 + alpha d), n  ) = dist;
+	// dot( v1,n ) + alpha*dot( d,n ) = dist;
+	//               alpha*dot( d,n ) = dist - dot( v1, n )
+	//                          alpha = ( dist - dot( v1, n ) ) / dot( d, n )
+
+	v1dotn = DotProduct( plane_n, ray->vs[0] );
+	alpha  = ( plane_dist - v1dotn ) / ndotd;
+
+	if( alpha < 0.0f || alpha > ray->len )
+		return false;
+
+	VectorCopy( ray->d, v );
+	MultVector( alpha,  v );
+	PlusVector( ray->o, v );
+	return true;
+}
+*/

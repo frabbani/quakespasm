@@ -119,5 +119,34 @@ float	anglemod(float a);
 	:										\
 		BoxOnPlaneSide( (emins), (emaxs), (p)))
 
+// FXR
+typedef struct frameref_s{
+	vec3 p, p_loc;
+	union{
+		struct{ vec3 f, r, u;
+		};
+		vec3 xyz[3];
+	};
+	vec3 angles;
+}frameref_t;
+
+frameref_t frameref( const vec3 p, const vec3 angles );
+void frameref_local( const frameref_t *ref, vec3 p );
+void frameref_world( const frameref_t *ref, vec3 p );
+void frameref_world_dir( const frameref_t *ref, vec3 d );
+
+
+typedef struct ray_s{
+	union{
+		vec3 ps[2];
+		struct{
+			vec3 o, e;
+		};
+	};
+	vec3  d;     //direction unit vector
+	float len;	  //v1 + len*d = v2
+}ray_t;
+
+
 #endif	/* __MATHLIB_H */
 
