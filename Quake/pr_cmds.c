@@ -732,6 +732,50 @@ static void PF_traceline (void)
 		pr_global_struct->trace_ent = EDICT_TO_PROG(sv.edicts);
 }
 
+static void PF_trace_entity (void)
+{
+	float	*v1, *v2;
+	trace_t	trace;
+	edict_t	*ent;
+
+	ent = G_EDICT ( OFS_PARM0 );
+	v1  = G_VECTOR( OFS_PARM1 );
+	v2  = G_VECTOR( OFS_PARM2 );
+
+
+	/* FIXME FIXME FIXME: Why do we hit this with certain progs.dat ?? */
+	if (developer.value) {
+	  if (IS_NAN(v1[0]) || IS_NAN(v1[1]) || IS_NAN(v1[2]) ||
+	      IS_NAN(v2[0]) || IS_NAN(v2[1]) || IS_NAN(v2[2])) {
+	    Con_Warning ("NAN in traceline:\nv1(%f %f %f) v2(%f %f %f)\nentity %d\n",
+		      v1[0], v1[1], v1[2], v2[0], v2[1], v2[2], NUM_FOR_EDICT(ent));
+	  }
+	}
+
+	if (IS_NAN(v1[0]) || IS_NAN(v1[1]) || IS_NAN(v1[2]))
+		v1[0] = v1[1] = v1[2] = 0;
+	if (IS_NAN(v2[0]) || IS_NAN(v2[1]) || IS_NAN(v2[2]))
+		v2[0] = v2[1] = v2[2] = 0;
+
+	extern trace_t SV_ClipMoveToEntity (edict_t *ent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
+
+	trace = SV_ClipMoveToEntity( ent, v1, vec3_origin, vec3_origin, v2 );
+
+	pr_global_struct->trace_allsolid = trace.allsolid;
+	pr_global_struct->trace_startsolid = trace.startsolid;
+	pr_global_struct->trace_fraction = trace.fraction;
+	pr_global_struct->trace_inwater = trace.inwater;
+	pr_global_struct->trace_inopen = trace.inopen;
+	VectorCopy (trace.endpos, pr_global_struct->trace_endpos);
+	VectorCopy (trace.plane.normal, pr_global_struct->trace_plane_normal);
+	pr_global_struct->trace_plane_dist =  trace.plane.dist;
+	if (trace.ent)
+		pr_global_struct->trace_ent = EDICT_TO_PROG(trace.ent);
+	else
+		pr_global_struct->trace_ent = EDICT_TO_PROG(sv.edicts);
+}
+
+
 /*
 =================
 PF_checkpos
@@ -1789,7 +1833,8 @@ static builtin_t pr_builtin[] =
 	PF_WriteString,
 	PF_WriteEntity,
 
-	PF_Fixme,
+	//FXR
+	PF_trace_entity,	//60
 	PF_Fixme,
 	PF_Fixme,
 	PF_Fixme,
