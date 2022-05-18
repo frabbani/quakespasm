@@ -1,5 +1,7 @@
 #pragma once
 
+#include "q_stdinc.h"
+#include "mathlib.h"
 
 typedef struct coll_tri_s{
 	qboolean valid;
@@ -9,15 +11,15 @@ typedef struct coll_tri_s{
 		vec3   n;
 		float  dist;
 	}plane;
-	struct{
-		vec3 r, f, u;	//right, forward and up axes
-	}basis;
 
 }coll_tri_t;
 
 
-void coll_tri_make( coll_tri_t *tri, const vec3 p0, const vec3 p1, const vec3 p2 );
-qboolean coll_tri_ray_hit( const hittri_t *tri, const ray_t *ray, vec3_t v, float *len, float *mu_val, float *nu_val );
+coll_tri_t coll_tri_make( const vec3 p0, const vec3 p1, const vec3 p2 );
+
+//p = t->o + mu * t->u + nu * t->v
+//
+qboolean coll_tri_ray_hit( const coll_tri_t *tri, ray_t ray, vec3_t p, float *len, float *mu, float *nu );
 
 typedef struct coll_header_s{
 	int32 num_poses, num_tris_per_pose;

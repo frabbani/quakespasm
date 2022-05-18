@@ -506,13 +506,13 @@ frameref_t frameref( const vec3 p, const vec3 angles ){
 	frameref_t ref = {{0}};
 
 	v3copy( ref.angles, angles );
-	AngleVectors( ref.angles, ref.f, ref.r, ref.u );
-	v3muls( ref.r, -1.0f );
+	AngleVectors( ref.angles, ref.basis.f, ref.basis.r, ref.basis.u );
+	v3muls( ref.basis.r, -1.0f );	//-y is right, +y is left
 
 	v3copy( ref.p, p );
-	ref.p_loc[0] = v3dot( ref.p, ref.xyz[0] );
-	ref.p_loc[1] = v3dot( ref.p, ref.xyz[1] );
-	ref.p_loc[2] = v3dot( ref.p, ref.xyz[2] );
+	ref.p_loc[0] = v3dot( ref.p, ref.basis.fru[0] );
+	ref.p_loc[1] = v3dot( ref.p, ref.basis.fru[1] );
+	ref.p_loc[2] = v3dot( ref.p, ref.basis.fru[2] );
 	return ref;
 }
 
@@ -520,54 +520,67 @@ frameref_t frameref( const vec3 p, const vec3 angles ){
 void frameref_local( const frameref_t *ref, vec3 p ){
 	vec3 d;
 	v3make( d, ref->p, p );
-	p[0] = v3dot( d, ref->xyz[0] );
-	p[1] = v3dot( d, ref->xyz[1] );
-	p[2] = v3dot( d, ref->xyz[2] );
+	p[0] = v3dot( d, ref->basis.f );
+	p[1] = v3dot( d, ref->basis.r );
+	p[2] = v3dot( d, ref->basis.u );
+}
+
+void frameref_world_v( const frameref_t *ref, vec3 v ){
+	vec3 fru[3];
+
+	for( int32 i = 0; i < 3; i++ ){
+		v3copy( fru[i], ref->basis.fru[i] );
+		v3muls( fru[i], v[i] );
+	}
+
+	v3zero( v );
+	for( int32 i = 0; i < 3; i++ )
+		v3add( v, fru[i] );
 }
 
 void frameref_world( const frameref_t *ref, vec3 p ){
-	vec3 xyz[3];
-
-	for( int32 i = 0; i < 3; i++ ){
-		v3copy( xyz[i], ref->xyz[i] );
-		v3muls( xyz[i], p[i] );
-	}
-
-	v3copy( p, ref->p );
-	for( int32 i = 0; i < 3; i++ )
-		v3add( p, xyz[i] );
-
+	frameref_world_v( ref, p );
+	v3add( p, ref->p );
 }
 
-void frameref_world_dir( const frameref_t *ref, vec3 d ){
-	vec3 xyz[3];
-
-	for( int32 i = 0; i < 3; i++ ){
-		v3copy( xyz[i], ref->xyz[i] );
-		v3muls( xyz[i], d[i] );
+ray_t ray_make( const vec3 p0, const vec3 p1 ){
+	ray_t ray;
+	v3copy( ray.ps[0], p0 );
+	v3copy( ray.ps[1], p1 );
+	v3make( ray.d, ray.o, ray.e );
+	if( v3dot( ray.d, ray.d ) > TOL_SQ ){
+		ray.len = v3norm( ray.d );
 	}
-
-	v3zero( d );
-	for( int32 i = 0; i < 3; i++ )
-		v3add( d, xyz[i] );
+	else{
+		v3zero( ray.d );
+		ray.len = 0.0f;
+	}
+	return ray;
 }
 
-/*
-void ray_make( ray_t *ray, vec3_t v1, vec3_t v2 ){
-	VectorCopy( v1, ray->vs[0] );
-	VectorCopy( v2, ray->vs[1] );
-	MakeVector( ray->vs[0], ray->vs[1], ray->d );
-	ray->len = VectorNormalize( ray->d );
+
+ray_t ray_local( ray_t ray, const frameref_t *ref ){
+	frameref_local( ref, ray.o );
+	frameref_local( ref, ray.e );
+	return ray_make( ray.o, ray.e );
+}
+
+ray_t ray_world( ray_t ray, const frameref_t *ref ){
+	frameref_world( ref, ray.o );
+	frameref_world( ref, ray.e );
+	return ray_make( ray.o, ray.e );
 }
 
 
 //assumes ray length > 0
-qboolean plane_ray_hit( const vec3_t plane_n, float plane_dist, const ray_t *ray, vec3_t v ){
-	const float grazing = 0.0349f;	//~2 degs grazing angle (sin(~2))
-	//assume len > 0.0f;
-	float ndotd, v1dotn, alpha;
+qboolean ray_plane_isect( ray_t ray, const vec3_t plane_n, float plane_dist, vec3 p ){
+	const float grazing = 0.01745f;	//~1 degs grazing angle (sin(~1))
+	if( ray.len == 0.0f )
+		return false;
 
-	ndotd = DotProduct( plane_n, ray->d );
+	float ndotd, odotn, alpha;
+
+	ndotd = v3dot( plane_n, ray.d );
 	if( fabsf( ndotd ) < grazing )	//assume not touching at grazing angle
 		return false;
 
@@ -576,15 +589,13 @@ qboolean plane_ray_hit( const vec3_t plane_n, float plane_dist, const ray_t *ray
 	//               alpha*dot( d,n ) = dist - dot( v1, n )
 	//                          alpha = ( dist - dot( v1, n ) ) / dot( d, n )
 
-	v1dotn = DotProduct( plane_n, ray->vs[0] );
-	alpha  = ( plane_dist - v1dotn ) / ndotd;
+	odotn = v3dot( plane_n, ray.o );
+	alpha  = ( plane_dist - odotn ) / ndotd;
 
-	if( alpha < 0.0f || alpha > ray->len )
+	if( alpha < 0.0f || alpha > ray.len )
 		return false;
 
-	VectorCopy( ray->d, v );
-	MultVector( alpha,  v );
-	PlusVector( ray->o, v );
+	v3copy( p, ray.o );
+	v3madd( p, alpha, ray.d );
 	return true;
 }
-*/
