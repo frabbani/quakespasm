@@ -365,6 +365,10 @@ typedef struct {
 	intptr_t		vertexes;       // offset into extradata: numposes*vertsperframe trivertx_t
 	//ericw --
 
+	//FXR -- collision data
+	intptr_t coll_tris;
+	//
+
 	int					numposes;
 	int					poseverts;
 	int					posedata;	// numposes*poseverts trivert_t

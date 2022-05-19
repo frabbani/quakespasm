@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // on the same machine.
 
 #include "quakedef.h"
+#include "collision.h"	//FXR
 
 qmodel_t	*loadmodel;
 char	loadname[32];	// for hunk tags
@@ -2310,6 +2311,7 @@ aliashdr_t	*pheader;
 
 stvert_t	stverts[MAXALIASVERTS];
 mtriangle_t	triangles[MAXALIASTRIS];
+vec3 poseverts_decomp[ MAXALIASFRAMES ][ MAXALIASVERTS ];
 
 // a pose is a single set of vertexes.  a frame may be
 // an animating sequence of poses
@@ -2618,6 +2620,7 @@ void Mod_CalcAliasBounds (aliashdr_t *a)
 	for (i=0 ; i<a->numposes; i++)
 		for (j=0; j<a->numverts; j++)
 		{
+
 			for (k=0; k<3;k++)
 				v[k] = poseverts[i][j].v[k] * pheader->scale[k] + pheader->scale_origin[k];
 
@@ -2709,112 +2712,60 @@ void Mod_SetExtraFlags (qmodel_t *mod)
 		mod->flags |= MOD_FBRIGHTHACK;
 }
 
-/*
-void Mod_LoadAliasHitData( qmodel_t *mod ){
+//FXR
+void Mod_LoadAliasCollision( aliashdr_t *hdr ){
 	static qboolean first = true;
 
-	int i, j;
+	int i, j, k;
 
 	if( first ){
-		FILE *fp = fopen( "/quakespasm-src/debug/Mod_LoadAliasData.txt", "w" );
+		FILE *fp = fopen( "debug/Mod_LoadAliasData.txt", "w" );
 		fclose( fp );
 		first = false;
 	}
-	FILE *fp = fopen( "/quakespasm-src/debug/Mod_LoadAliasData.txt", "a" );
-	const aliashdr_t *phdr_al = mod->cache.data;
-
+	FILE *fp = fopen( "debug/Mod_LoadAliasData.txt", "a" );
 
 	fprintf( fp, "*** model %s *** \n", loadname );
-	fprintf( fp, " * scale......: %f,%f,%f\n", phdr_al->scale[0],
-			                                   phdr_al->scale[1],
-											   phdr_al->scale[2] );
-	fprintf( fp, " * origin.....: %f,%f,%f\n", phdr_al->scale_origin[0],
-			                                   phdr_al->scale_origin[1],
-											   phdr_al->scale_origin[2] );
-	fprintf( fp, " * # of poses.: %d\n", phdr_al->numposes );
-	fprintf( fp, " * # of tris..: %d\n", phdr_al->numtris );
-	fprintf( fp, " * # of verts.: %d\n", phdr_al->numverts );
-	fprintf( fp, " * # of frames: %d\n", phdr_al->numframes );
-	for( i = 0; i < phdr_al->numframes; i++ )
-		fprintf( fp, " *  - frame %d name: %s\n", i, phdr_al->frames[i].name );
+	fprintf( fp, " * scale......: %f,%f,%f\n", hdr->scale[0],
+			                                   hdr->scale[1],
+											   hdr->scale[2] );
+	fprintf( fp, " * origin.....: %f,%f,%f\n", hdr->scale_origin[0],
+			                                   hdr->scale_origin[1],
+											   hdr->scale_origin[2] );
+	fprintf( fp, " * # of poses.: %d\n", hdr->numposes );
+	fprintf( fp, " * # of tris..: %d\n", hdr->numtris );
+	fprintf( fp, " * # of verts.: %d\n", hdr->numverts );
+	fprintf( fp, " * # of frames: %d\n", hdr->numframes );
+	for( i = 0; i < hdr->numframes; i++ )
+		fprintf( fp, " *  - frame %d name: %s\n", i, hdr->frames[i].name );
+
+	coll_tri_t *coll_tris = (coll_tri_t *) Hunk_Alloc(
+			hdr->numposes * hdr->numtris * sizeof(coll_tri_t) );
+
+	hdr->coll_tris = (intptr_t)coll_tris - (intptr_t)hdr;
+
+	int32 c = 0;
+	for( i = 0; i < hdr->numposes; i++ )
+		for( j = 0; j < hdr->numtris; j++ ){
+			mtriangle_t *t = &triangles[j];
+			int v0 = t->vertindex[0];
+			int v1 = t->vertindex[1];
+			int v2 = t->vertindex[2];
+
+			vec3 p0, p1, p2;
+			for( k = 0; k < 3; k++ ){
+				p0[k] = poseverts[i][v0].v[k] * hdr->scale[k] + hdr->scale_origin[k];
+				p1[k] = poseverts[i][v1].v[k] * hdr->scale[k] + hdr->scale_origin[k];
+				p2[k] = poseverts[i][v2].v[k] * hdr->scale[k] + hdr->scale_origin[k];
+			}
+			coll_tris[c++] = coll_tri_make( p0, p1, p2 );
+		}
+	fprintf( fp, " * # of collision tris: %d\n", c );
+
 	fprintf( fp, "******\n\n" );
 	fclose ( fp );
-
-	int numposes = phdr_al->numposes;
-	int numverts = phdr_al->numverts;
-	int numtris  = phdr_al->numtris;
-
-	mod->hitdata = calloc( sizeof(int) + sizeof(int) + numposes * numtris, sizeof(hittri_t) );
-	hitheader_t *phdr_hit = mod->hitdata;
-	phdr_hit->numposes = numposes;
-	phdr_hit->numtrisperpose = numtris;
-
-	hittri_t *tri = &phdr_hit->hittris[0];
-	for( i = 0; i < phdr_hit->numposes; i++ )
-		for( j = 0; j < phdr_hit->numtrisperpose; j++ ){
-			mtriangle_t *t = &triangles[j];
-			int a = t->vertindex[0];
-			int b = t->vertindex[1];
-			int c = t->vertindex[2];
-			vec3_t va, vb, vc;
-			VectorCopy( savedposeverts[i][a], va );
-			VectorCopy( savedposeverts[i][b], vb );
-			VectorCopy( savedposeverts[i][c], vc );
-			//va[1] *= -1.0f;
-			//vb[1] *= -1.0f;
-			//vc[1] *= -1.0f;
-			hittri_make( tri, va, vb, vc );
-			tri++;
-		}
-	/ *
-    int start, end, total, size
-	//vec3_t scale, origin;
-	//VectorCopy( phdr_al->scale, scale );
-	//VectorCopy( phdr_al->scale_origin, origin );
-
-	start = Hunk_LowMark ();
-	size  = sizeof(int) + sizeof(int) + phdr_al->numposes * phdr_al->numtris * sizeof(hittri_t);
-
-	hitheader_t *phdr_hit = Hunk_AllocName( size, "hit data" );
-	phdr_hit->numposes = phdr_al->numposes;
-	phdr_hit->numtrisperpose = phdr_al->numtris;
-	* /
-
-	char fn[256];
-	sprintf( fn, "/quakespasm-src/debug/%s.obj", loadname );
-	fp = fopen( fn, "w" );
-
-	//for( i = 0 ; i< 1; i++ )
-	i = numposes-1;
-	for( j = 0; j < numverts; j++ ){
-		vec3_t v;
-		v[0] = savedposeverts[i][j][0];
-		v[1] = savedposeverts[i][j][1];
-		v[2] = savedposeverts[i][j][2];
-		fprintf( fp, "v %f %f %f\n", v[0], v[1], v[2] );
-	}
-
-	for( i = 0; i < numtris; i++ ){
-		mtriangle_t *tri = &triangles[i];
-		int a = tri->vertindex[0] + 1;
-		int b = tri->vertindex[1] + 1;
-		int c = tri->vertindex[2] + 1;
-		fprintf( fp, "f %d %d %d\n", a, b, c );
-	}
-	fclose( fp );
-
-	/ *
-	end = Hunk_LowMark ();
-	total = end - start;
-
-	Cache_Alloc (&mod->cache2, total, loadname );
-	if (!mod->cache2.data)
-		return;
-	memcpy (mod->cache2.data, pheader, total);
-	Hunk_FreeToLowMark (start);
-	* /
 }
-*/
+
 
 /*
 =================
@@ -2954,6 +2905,8 @@ void Mod_LoadAliasModel (qmodel_t *mod, void *buffer)
 	Mod_SetExtraFlags (mod); //johnfitz
 
 	Mod_CalcAliasBounds (pheader); //johnfitz
+
+	Mod_LoadAliasCollision(pheader);	//FXR
 
 	//
 	// build the draw lists

@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "quakedef.h"
+#include "collision.h"//FXR
 
 #define	STRINGTEMP_BUFFERS		16
 #define	STRINGTEMP_LENGTH		1024
@@ -732,11 +733,13 @@ static void PF_traceline (void)
 		pr_global_struct->trace_ent = EDICT_TO_PROG(sv.edicts);
 }
 
+//FXR
 static void PF_trace_entity (void)
 {
 	float	*v1, *v2;
 	trace_t	trace;
 	edict_t	*ent;
+
 
 	ent = G_EDICT ( OFS_PARM0 );
 	v1  = G_VECTOR( OFS_PARM1 );
@@ -761,6 +764,19 @@ static void PF_trace_entity (void)
 
 	trace = SV_ClipMoveToEntity( ent, v1, vec3_origin, vec3_origin, v2 );
 
+	qmodel_t *mod = sv.models[ (int32)ent->v.modelindex ];
+
+	static qboolean first = true;
+	if( first && mod->type == mod_alias ){
+		aliashdr_t *hdr = (aliashdr_t *) Mod_Extradata( mod );
+		coll_tri_t *tris = (coll_tri_t*)( (intptr_t)hdr + hdr->coll_tris );
+
+		coll_tris_dump_obj( tris, hdr->numtris, mod->name );
+		first = false;
+
+	}
+
+
 	pr_global_struct->trace_allsolid = trace.allsolid;
 	pr_global_struct->trace_startsolid = trace.startsolid;
 	pr_global_struct->trace_fraction = trace.fraction;
@@ -769,8 +785,10 @@ static void PF_trace_entity (void)
 	VectorCopy (trace.endpos, pr_global_struct->trace_endpos);
 	VectorCopy (trace.plane.normal, pr_global_struct->trace_plane_normal);
 	pr_global_struct->trace_plane_dist =  trace.plane.dist;
-	if (trace.ent)
-		pr_global_struct->trace_ent = EDICT_TO_PROG(trace.ent);
+	if( trace.fraction < 1.0f )
+		pr_global_struct->trace_ent = EDICT_TO_PROG(ent);
+	//if (0)//(trace.ent)
+	//	pr_global_struct->trace_ent = EDICT_TO_PROG(trace.ent);
 	else
 		pr_global_struct->trace_ent = EDICT_TO_PROG(sv.edicts);
 }
