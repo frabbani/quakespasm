@@ -8,10 +8,7 @@ typedef struct coll_tri_s{
 	vec3     ps[3];
 	vec3     o, u, v;
 	mat2x2   A;
-	struct{
-		vec3   n;
-		float  dist;
-	}plane;
+	fplane_t plane;
 
 }coll_tri_t;
 

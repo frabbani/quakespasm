@@ -502,7 +502,7 @@ fixed16_t Invert24To16(fixed16_t val)
 
 // FXR
 
-frameref_t frameref( const vec3 p, const vec3 angles ){
+frameref_t frameref_make( const vec3 p, const vec3 angles ){
 	frameref_t ref = {{0}};
 
 	v3copy( ref.angles, angles );
@@ -543,6 +543,26 @@ void frameref_world( const frameref_t *ref, vec3 p ){
 	v3add( p, ref->p );
 }
 
+fplane_t plane_make( const vec3 p, const vec3 n ){
+	fplane_t plane;
+	v3copy( plane.n, n );
+	v3norm( plane.n );
+	plane.dist = v3dot( p, plane.n );
+	return plane;
+}
+
+fplane_t plane_world( const frameref_t *ref, fplane_t plane ){
+	vec3 p, n;
+	v3copy( n, plane.n );
+	v3copy( p, plane.n );
+	v3muls( p, plane.dist );
+	frameref_world_v( ref, n );
+	frameref_world  ( ref, p );
+
+	return plane_make( p, n );
+}
+
+
 ray_t ray_make( const vec3 p0, const vec3 p1 ){
 	ray_t ray;
 	v3copy( ray.ps[0], p0 );
@@ -573,7 +593,7 @@ ray_t ray_world( ray_t ray, const frameref_t *ref ){
 
 
 //assumes ray length > 0
-qboolean ray_plane_isect( ray_t ray, const vec3_t plane_n, float plane_dist, vec3 p ){
+qboolean ray_plane_isect( ray_t ray, const vec3 plane_n, float plane_dist, vec3 p ){
 	const float grazing = 0.01745f;	//~1 degs grazing angle (sin(~1))
 	if( ray.len == 0.0f )
 		return false;

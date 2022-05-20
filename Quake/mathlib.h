@@ -131,6 +131,8 @@ typedef struct basis_s{
 
 #define TOL	(1e-7f)
 #define TOL_SQ	(TOL*TOL)
+
+
 typedef struct frameref_s{
 	vec3    p,
 	        p_loc;
@@ -138,11 +140,19 @@ typedef struct frameref_s{
 	vec3    angles;
 }frameref_t;
 
-frameref_t frameref( const vec3 p, const vec3 angles );
+frameref_t frameref_make( const vec3 p, const vec3 angles );
 void frameref_local( const frameref_t *ref, vec3 p );
 void frameref_world( const frameref_t *ref, vec3 p );
 void frameref_world_v( const frameref_t *ref, vec3 v );
 
+//plane struct already exists in world.h
+typedef struct fplane_s{
+	vec3  n;
+	float dist;
+}fplane_t;
+
+fplane_t plane_make( const vec3 p, const vec3 n );
+fplane_t plane_world( const frameref_t *ref, fplane_t plane );
 
 typedef struct ray_s{
 	union{
@@ -158,7 +168,7 @@ typedef struct ray_s{
 ray_t ray_make( const vec3 p0, const vec3 p1 );
 ray_t ray_local( ray_t ray, const frameref_t *ref );
 ray_t ray_world( ray_t ray, const frameref_t *ref );
-qboolean ray_plane_isect( ray_t ray, const vec3_t plane_n, float plane_dist, vec3 p );
+qboolean ray_plane_isect( ray_t ray, const vec3 plane_n, float plane_dist, vec3 p );
 
 #endif	/* __MATHLIB_H */
 

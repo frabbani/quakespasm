@@ -21,7 +21,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "quakedef.h"
-#include "collision.h"//FXR
+
+//FXR
+#include "mathlib.h"
+#include "collision.h"
+#include "vec.h"
 
 #define	STRINGTEMP_BUFFERS		16
 #define	STRINGTEMP_LENGTH		1024
@@ -734,17 +738,21 @@ static void PF_traceline (void)
 }
 
 //FXR
+extern trace_t SV_ClipMoveToEntity (edict_t *ent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
+
 static void PF_trace_entity (void)
 {
 	float	*v1, *v2;
 	trace_t	trace;
 	edict_t	*ent;
-
+	vec3     o, e;
 
 	ent = G_EDICT ( OFS_PARM0 );
 	v1  = G_VECTOR( OFS_PARM1 );
 	v2  = G_VECTOR( OFS_PARM2 );
 
+	v3copy( o, v1 );
+	v3copy( e, v2 );
 
 	/* FIXME FIXME FIXME: Why do we hit this with certain progs.dat ?? */
 	if (developer.value) {
@@ -760,37 +768,73 @@ static void PF_trace_entity (void)
 	if (IS_NAN(v2[0]) || IS_NAN(v2[1]) || IS_NAN(v2[2]))
 		v2[0] = v2[1] = v2[2] = 0;
 
-	extern trace_t SV_ClipMoveToEntity (edict_t *ent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
+	trace = SV_ClipMoveToEntity( ent, o, vec3_origin, vec3_origin, e );
 
-	trace = SV_ClipMoveToEntity( ent, v1, vec3_origin, vec3_origin, v2 );
+	pr_global_struct->trace_allsolid   = trace.allsolid;
+	pr_global_struct->trace_startsolid = trace.startsolid;
+	pr_global_struct->trace_fraction   = trace.fraction;
+	pr_global_struct->trace_inwater    = trace.inwater;
+	pr_global_struct->trace_inopen     = trace.inopen;
+	v3copy( pr_global_struct->trace_endpos, trace.endpos );
+	v3copy( pr_global_struct->trace_plane_normal, trace.plane.normal );
+	pr_global_struct->trace_plane_dist = trace.plane.dist;
+	pr_global_struct->trace_ent = EDICT_TO_PROG (sv.edicts );
+	if( trace.fraction == 1.0f )
+		return;
+
 
 	qmodel_t *mod = sv.models[ (int32)ent->v.modelindex ];
-
-	static qboolean first = true;
-	if( first && mod->type == mod_alias ){
-		aliashdr_t *hdr = (aliashdr_t *) Mod_Extradata( mod );
-		coll_tri_t *tris = (coll_tri_t*)( (intptr_t)hdr + hdr->coll_tris );
-
-		coll_tris_dump_obj( tris, hdr->numtris, mod->name );
-		first = false;
-
+	if( mod->type != mod_alias ){
+		pr_global_struct->trace_ent = EDICT_TO_PROG( trace.ent );
+		return;
 	}
 
+	aliashdr_t *hdr  = (aliashdr_t *) Mod_Extradata( mod );
+	coll_tri_t *tris = (coll_tri_t*)( (intptr_t)hdr + hdr->coll_tris );
+	frameref_t  ref  = frameref_make( ent->v.origin, ent->v.angles );
 
-	pr_global_struct->trace_allsolid = trace.allsolid;
-	pr_global_struct->trace_startsolid = trace.startsolid;
-	pr_global_struct->trace_fraction = trace.fraction;
-	pr_global_struct->trace_inwater = trace.inwater;
-	pr_global_struct->trace_inopen = trace.inopen;
-	VectorCopy (trace.endpos, pr_global_struct->trace_endpos);
-	VectorCopy (trace.plane.normal, pr_global_struct->trace_plane_normal);
-	pr_global_struct->trace_plane_dist =  trace.plane.dist;
-	if( trace.fraction < 1.0f )
-		pr_global_struct->trace_ent = EDICT_TO_PROG(ent);
-	//if (0)//(trace.ent)
-	//	pr_global_struct->trace_ent = EDICT_TO_PROG(trace.ent);
-	else
-		pr_global_struct->trace_ent = EDICT_TO_PROG(sv.edicts);
+	int32 frame    = (int32)ent->v.frame;
+	int32 pose     = hdr->frames[ frame ].firstpose;
+	int32 numposes = hdr->frames[ frame ].numposes;
+
+	// stolen from R_SetupAliasFrame.
+	if (numposes > 1 ){
+		pose += (int)(sv.time / hdr->frames[frame].interval ) % numposes;
+	}
+
+	qboolean collision = 0;
+	coll_tri_t *tri = NULL;
+	ray_t ray = ray_make( o, e );
+
+	static qboolean first = true;
+	if( first ){
+		coll_tris_dump_obj( &tris[ pose * hdr->numtris ], hdr->numtris, mod->name );
+		first = !first;
+	}
+
+	ray = ray_local( ray, &ref );
+	vec3 p0, p1;
+	v3copy( p0, ray.o );
+	for( int32 i = 0; i < hdr->numtris; i++ ){
+		tri =  &tris[ pose * hdr->numtris + i ];
+		if( !coll_tri_ray_isect( tri, ray, p1, NULL, NULL, NULL ) )
+			continue;
+		ray = ray_make( p0, p1 );
+		collision = true;
+	}
+	ray = ray_world( ray, &ref );
+
+	if( !collision ){
+		pr_global_struct->trace_ent = EDICT_TO_PROG( sv.edicts );
+		return;
+	}
+
+	fplane_t plane = plane_world( &ref, tri->plane );
+
+	v3copy( pr_global_struct->trace_endpos, ray.e );
+	v3copy( pr_global_struct->trace_plane_normal, plane.n );
+	pr_global_struct->trace_plane_dist = plane.dist;
+	pr_global_struct->trace_ent = EDICT_TO_PROG( ent );
 }
 
 

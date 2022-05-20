@@ -48,7 +48,7 @@ coll_tri_t coll_tri_make( const vec3 p0, const vec3 p1, const vec3 p2 ){
 }
 
 
-qboolean coll_tri_ray_isect( const coll_tri_t *tri, ray_t ray, vec3_t p, float *len, float *mu, float *nu ){
+qboolean coll_tri_ray_isect( const coll_tri_t *tri, ray_t ray, vec3 p, float *len, float *mu, float *nu ){
 	vec3 v;
 	vec2 b;
 	float  mu_, nu_;
@@ -58,7 +58,7 @@ qboolean coll_tri_ray_isect( const coll_tri_t *tri, ray_t ray, vec3_t p, float *
 	if( !ray_plane_isect( ray, tri->plane.n, tri->plane.dist, p ) )
 			return false;
 
-	if( *len ){
+	if( len ){
 		v3make( v, ray.o, p );
 		*len = v3dot( v, ray.d );
 	}
@@ -71,9 +71,9 @@ qboolean coll_tri_ray_isect( const coll_tri_t *tri, ray_t ray, vec3_t p, float *
 	mu_ = v2dot( tri->A[0], b );
 	nu_ = v2dot( tri->A[1], b );
 
-	if( *mu )
+	if( mu )
 		*mu = mu_;
-	if( *nu )
+	if( nu )
 		*nu = nu_;
 
 	if( mu_ < 0.0f || nu_ < 0.0f || ( mu_ + nu_ ) > 1.0f )
