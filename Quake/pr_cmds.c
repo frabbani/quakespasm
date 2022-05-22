@@ -738,21 +738,23 @@ static void PF_traceline (void)
 }
 
 //FXR
-extern trace_t SV_ClipMoveToEntity (edict_t *ent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
-
+//There is no check to if vector length > 0
 static void PF_trace_entity (void)
 {
+	extern trace_t SV_ClipMoveToEntity( edict_t *ent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end );
+
 	float	*v1, *v2;
 	trace_t	trace;
 	edict_t	*ent;
-	vec3     o, e;
+	vec3     p0, p1;
+	float    len;
 
 	ent = G_EDICT ( OFS_PARM0 );
 	v1  = G_VECTOR( OFS_PARM1 );
 	v2  = G_VECTOR( OFS_PARM2 );
 
-	v3copy( o, v1 );
-	v3copy( e, v2 );
+	v3copy( p0, v1 );
+	v3copy( p1, v2 );
 
 	/* FIXME FIXME FIXME: Why do we hit this with certain progs.dat ?? */
 	if (developer.value) {
@@ -768,7 +770,7 @@ static void PF_trace_entity (void)
 	if (IS_NAN(v2[0]) || IS_NAN(v2[1]) || IS_NAN(v2[2]))
 		v2[0] = v2[1] = v2[2] = 0;
 
-	trace = SV_ClipMoveToEntity( ent, o, vec3_origin, vec3_origin, e );
+	trace = SV_ClipMoveToEntity( ent, p0, vec3_origin, vec3_origin, p1 );
 
 	pr_global_struct->trace_allsolid   = trace.allsolid;
 	pr_global_struct->trace_startsolid = trace.startsolid;
@@ -790,31 +792,35 @@ static void PF_trace_entity (void)
 	}
 
 	aliashdr_t *hdr  = (aliashdr_t *) Mod_Extradata( mod );
-	coll_tri_t *tris = (coll_tri_t*)( (intptr_t)hdr + hdr->coll_tris );
+	coll_tri_t *tris = (coll_tri_t *)( (intptr_t)hdr + hdr->coll_tris );
 	frameref_t  ref  = frameref_make( ent->v.origin, ent->v.angles );
 
 	int32 frame    = (int32)ent->v.frame;
 	int32 pose     = hdr->frames[ frame ].firstpose;
-	int32 numposes = hdr->frames[ frame ].numposes;
 
-	// stolen from R_SetupAliasFrame.
+	// stolen from R_SetupAliasFrame
+	int32 numposes = hdr->frames[ frame ].numposes;
 	if (numposes > 1 ){
 		pose += (int)(sv.time / hdr->frames[frame].interval ) % numposes;
 	}
 
-	qboolean collision = 0;
-	coll_tri_t *tri = NULL;
-	ray_t ray = ray_make( o, e );
-
+	/*
 	static qboolean first = true;
 	if( first ){
 		coll_tris_dump_obj( &tris[ pose * hdr->numtris ], hdr->numtris, mod->name );
 		first = !first;
 	}
+	*/
 
+	qboolean collision = 0;
+	coll_tri_t *tri = NULL;
+	ray_t ray = ray_make( p0, p1 );
+	len = ray.len;
+
+	//NOT OPTIMIZED, but is easier to understand and works
+	//ideally, we would pass ray by reference eliminate the repeated ray_make call,
+	//but this works and thats what i really care about (perfomance is fine...)
 	ray = ray_local( ray, &ref );
-	vec3 p0, p1;
-	v3copy( p0, ray.o );
 	for( int32 i = 0; i < hdr->numtris; i++ ){
 		tri =  &tris[ pose * hdr->numtris + i ];
 		if( !coll_tri_ray_isect( tri, ray, p1, NULL, NULL, NULL ) )
@@ -822,19 +828,19 @@ static void PF_trace_entity (void)
 		ray = ray_make( p0, p1 );
 		collision = true;
 	}
-	ray = ray_world( ray, &ref );
-
 	if( !collision ){
 		pr_global_struct->trace_ent = EDICT_TO_PROG( sv.edicts );
+		pr_global_struct->trace_fraction = 1.0f;
 		return;
 	}
-
+	ray = ray_world( ray, &ref );
 	fplane_t plane = plane_world( &ref, tri->plane );
 
 	v3copy( pr_global_struct->trace_endpos, ray.e );
 	v3copy( pr_global_struct->trace_plane_normal, plane.n );
 	pr_global_struct->trace_plane_dist = plane.dist;
 	pr_global_struct->trace_ent = EDICT_TO_PROG( ent );
+	pr_global_struct->trace_fraction = ray.len / len;
 }
 
 

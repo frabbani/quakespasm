@@ -2714,10 +2714,10 @@ void Mod_SetExtraFlags (qmodel_t *mod)
 
 //FXR
 void Mod_LoadAliasCollision( aliashdr_t *hdr ){
-	static qboolean first = true;
-
 	int i, j, k;
 
+	/*
+	static qboolean first = true;
 	if( first ){
 		FILE *fp = fopen( "debug/Mod_LoadAliasData.txt", "w" );
 		fclose( fp );
@@ -2738,6 +2738,7 @@ void Mod_LoadAliasCollision( aliashdr_t *hdr ){
 	fprintf( fp, " * # of frames: %d\n", hdr->numframes );
 	for( i = 0; i < hdr->numframes; i++ )
 		fprintf( fp, " *  - frame %d name: %s\n", i, hdr->frames[i].name );
+	*/
 
 	coll_tri_t *coll_tris = (coll_tri_t *) Hunk_Alloc(
 			hdr->numposes * hdr->numtris * sizeof(coll_tri_t) );
@@ -2760,10 +2761,11 @@ void Mod_LoadAliasCollision( aliashdr_t *hdr ){
 			}
 			coll_tris[c++] = coll_tri_make( p0, p1, p2 );
 		}
+	/*
 	fprintf( fp, " * # of collision tris: %d\n", c );
-
 	fprintf( fp, "******\n\n" );
 	fclose ( fp );
+	*/
 }
 
 
@@ -2925,6 +2927,8 @@ void Mod_LoadAliasModel (qmodel_t *mod, void *buffer)
 	memcpy (mod->cache.data, pheader, total);
 
 	Hunk_FreeToLowMark (start);
+
+	Sys_Printf( "%s - loaded model '%s'\n", __FUNCTION__, mod->name );
 }
 
 //=============================================================================
