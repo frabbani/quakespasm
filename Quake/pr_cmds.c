@@ -784,8 +784,10 @@ static void PF_trace_entity (void)
 	if( trace.fraction == 1.0f )
 		return;
 
-
 	qmodel_t *mod = sv.models[ (int32)ent->v.modelindex ];
+	if( !mod )
+		return;
+
 	if( mod->type != mod_alias ){
 		pr_global_struct->trace_ent = EDICT_TO_PROG( trace.ent );
 		return;
