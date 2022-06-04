@@ -823,12 +823,16 @@ static void PF_trace_entity (void)
 	//ideally, we would pass ray by reference eliminate the repeated ray_make call,
 	//but this works and thats what i really care about (perfomance is fine...)
 	ray = ray_local( ray, &ref );
+	fplane_t plane;
 	v3copy( p0, ray.o );
 	v3copy( p1, ray.e );
 	for( int32 i = 0; i < hdr->numtris; i++ ){
 		tri =  &tris[ pose * hdr->numtris + i ];
 		if( !coll_tri_ray_isect( tri, ray, p1, NULL, NULL, NULL ) )
 			continue;
+		plane = tri->plane;
+		v3muls( plane.n, -1.0f );
+		plane.dist *= -1.0f;
 		ray = ray_make( p0, p1 );
 		collision = true;
 	}
@@ -837,8 +841,9 @@ static void PF_trace_entity (void)
 		pr_global_struct->trace_fraction = 1.0f;
 		return;
 	}
+
 	ray = ray_world( ray, &ref );
-	fplane_t plane = plane_world( &ref, tri->plane );
+	plane = plane_world( &ref, plane );
 
 	v3copy( pr_global_struct->trace_endpos, ray.e );
 	v3copy( pr_global_struct->trace_plane_normal, plane.n );
