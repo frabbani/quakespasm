@@ -1,0 +1,14 @@
+*.o
+*.dll
+.cproject
+.project
+/settings
+.settings
+QuakeSpasm.res
+quakespasm.exe
+stdout.txt
+Base
+id1
+sandbox
+debug
+

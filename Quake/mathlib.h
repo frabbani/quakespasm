@@ -119,5 +119,56 @@ float	anglemod(float a);
 	:										\
 		BoxOnPlaneSide( (emins), (emaxs), (p)))
 
+//orthonormal basis
+typedef struct basis_s{
+	union{
+		struct{ vec3 f, r, u;	};
+		vec3 fru[3];
+	};
+}basis_t;
+
+// FXR
+
+#define TOL	(1e-7f)
+#define TOL_SQ	(TOL*TOL)
+
+
+typedef struct frameref_s{
+	vec3    p,
+	        p_loc;
+	basis_t basis;
+	vec3    angles;
+}frameref_t;
+
+frameref_t frameref_make( const vec3 p, const vec3 angles );
+void frameref_local( const frameref_t *ref, vec3 p );
+void frameref_world( const frameref_t *ref, vec3 p );
+void frameref_world_v( const frameref_t *ref, vec3 v );
+
+//plane struct already exists in world.h
+typedef struct fplane_s{
+	vec3  n;
+	float dist;
+}fplane_t;
+
+fplane_t plane_make( const vec3 p, const vec3 n );
+fplane_t plane_world( const frameref_t *ref, fplane_t plane );
+
+typedef struct ray_s{
+	union{
+		vec3 ps[2];
+		struct{
+			vec3 o, e;	//origin/end
+		};
+	};
+	vec3  d;     //direction unit vector
+	float len;	  //v1 + len*d = v2
+}ray_t;
+
+ray_t ray_make( const vec3 p0, const vec3 p1 );
+ray_t ray_local( ray_t ray, const frameref_t *ref );
+ray_t ray_world( ray_t ray, const frameref_t *ref );
+qboolean ray_plane_isect( ray_t ray, const vec3 plane_n, float plane_dist, vec3 p );
+
 #endif	/* __MATHLIB_H */
 

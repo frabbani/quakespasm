@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // mathlib.c -- math primitives
 
 #include "quakedef.h"
+#include "vec.h"
 
 vec3_t vec3_origin = {0,0,0};
 
@@ -498,3 +499,123 @@ fixed16_t Invert24To16(fixed16_t val)
 			(((double)0x10000 * (double)0x1000000 / (double)val) + 0.5);
 }
 
+
+// FXR
+
+frameref_t frameref_make( const vec3 p, const vec3 angles ){
+	frameref_t ref = {{0}};
+
+	v3copy( ref.angles, angles );
+	AngleVectors( ref.angles, ref.basis.f, ref.basis.r, ref.basis.u );
+	v3muls( ref.basis.r, -1.0f );	//-y is right, +y is left
+
+	v3copy( ref.p, p );
+	ref.p_loc[0] = v3dot( ref.p, ref.basis.fru[0] );
+	ref.p_loc[1] = v3dot( ref.p, ref.basis.fru[1] );
+	ref.p_loc[2] = v3dot( ref.p, ref.basis.fru[2] );
+	return ref;
+}
+
+
+void frameref_local( const frameref_t *ref, vec3 p ){
+	vec3 d;
+	v3make( d, ref->p, p );
+	p[0] = v3dot( d, ref->basis.f );
+	p[1] = v3dot( d, ref->basis.r );
+	p[2] = v3dot( d, ref->basis.u );
+}
+
+void frameref_world_v( const frameref_t *ref, vec3 v ){
+	vec3 fru[3];
+
+	for( int32 i = 0; i < 3; i++ ){
+		v3copy( fru[i], ref->basis.fru[i] );
+		v3muls( fru[i], v[i] );
+	}
+
+	v3zero( v );
+	for( int32 i = 0; i < 3; i++ )
+		v3add( v, fru[i] );
+}
+
+void frameref_world( const frameref_t *ref, vec3 p ){
+	frameref_world_v( ref, p );
+	v3add( p, ref->p );
+}
+
+fplane_t plane_make( const vec3 p, const vec3 n ){
+	fplane_t plane;
+	v3copy( plane.n, n );
+	v3norm( plane.n );
+	plane.dist = v3dot( p, plane.n );
+	return plane;
+}
+
+fplane_t plane_world( const frameref_t *ref, fplane_t plane ){
+	vec3 p, n;
+	v3copy( n, plane.n );
+	v3copy( p, plane.n );
+	v3muls( p, plane.dist );
+	frameref_world_v( ref, n );
+	frameref_world  ( ref, p );
+
+	return plane_make( p, n );
+}
+
+
+ray_t ray_make( const vec3 p0, const vec3 p1 ){
+	ray_t ray;
+	v3copy( ray.ps[0], p0 );
+	v3copy( ray.ps[1], p1 );
+	v3make( ray.d, ray.o, ray.e );
+	if( v3dot( ray.d, ray.d ) > TOL_SQ ){
+		ray.len = v3norm( ray.d );
+	}
+	else{
+		v3zero( ray.d );
+		ray.len = 0.0f;
+	}
+	return ray;
+}
+
+
+ray_t ray_local( ray_t ray, const frameref_t *ref ){
+	frameref_local( ref, ray.o );
+	frameref_local( ref, ray.e );
+	return ray_make( ray.o, ray.e );
+}
+
+ray_t ray_world( ray_t ray, const frameref_t *ref ){
+	frameref_world( ref, ray.o );
+	frameref_world( ref, ray.e );
+	return ray_make( ray.o, ray.e );
+}
+
+
+//assumes ray length > 0
+qboolean ray_plane_isect( ray_t ray, const vec3 plane_n, float plane_dist, vec3 p ){
+	const float grazing = 0.01745f;	//~1 degs grazing angle (sin(~1))
+	if( ray.len == 0.0f )
+		return false;
+
+	float ndotd, odotn, alpha;
+
+	ndotd = v3dot( plane_n, ray.d );
+	if( fabsf( ndotd ) < grazing )	//assume not touching at grazing angle
+		return false;
+
+	//      dot( (v1 + alpha d), n  ) = dist;
+	// dot( v1,n ) + alpha*dot( d,n ) = dist;
+	//               alpha*dot( d,n ) = dist - dot( v1, n )
+	//                          alpha = ( dist - dot( v1, n ) ) / dot( d, n )
+
+	odotn = v3dot( plane_n, ray.o );
+	alpha  = ( plane_dist - odotn ) / ndotd;
+
+	if( alpha < 0.0f || alpha > ray.len )
+		return false;
+
+	v3copy( p, ray.o );
+	v3madd( p, alpha, ray.d );
+	return true;
+}

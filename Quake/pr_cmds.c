@@ -22,6 +22,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "quakedef.h"
 
+//FXR
+#include "mathlib.h"
+#include "collision.h"
+#include "vec.h"
+
 #define	STRINGTEMP_BUFFERS		16
 #define	STRINGTEMP_LENGTH		1024
 static	char	pr_string_temp[STRINGTEMP_BUFFERS][STRINGTEMP_LENGTH];
@@ -731,6 +736,122 @@ static void PF_traceline (void)
 	else
 		pr_global_struct->trace_ent = EDICT_TO_PROG(sv.edicts);
 }
+
+//FXR
+//There is no check to if vector length > 0
+static void PF_trace_entity (void)
+{
+	extern trace_t SV_ClipMoveToEntity( edict_t *ent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end );
+
+	float	*v1, *v2;
+	trace_t	trace;
+	edict_t	*ent;
+	vec3     p0, p1;
+	float    len;
+
+	ent = G_EDICT ( OFS_PARM0 );
+	v1  = G_VECTOR( OFS_PARM1 );
+	v2  = G_VECTOR( OFS_PARM2 );
+
+	v3copy( p0, v1 );
+	v3copy( p1, v2 );
+
+	/* FIXME FIXME FIXME: Why do we hit this with certain progs.dat ?? */
+	if (developer.value) {
+	  if (IS_NAN(v1[0]) || IS_NAN(v1[1]) || IS_NAN(v1[2]) ||
+	      IS_NAN(v2[0]) || IS_NAN(v2[1]) || IS_NAN(v2[2])) {
+	    Con_Warning ("NAN in traceline:\nv1(%f %f %f) v2(%f %f %f)\nentity %d\n",
+		      v1[0], v1[1], v1[2], v2[0], v2[1], v2[2], NUM_FOR_EDICT(ent));
+	  }
+	}
+
+	if (IS_NAN(v1[0]) || IS_NAN(v1[1]) || IS_NAN(v1[2]))
+		v1[0] = v1[1] = v1[2] = 0;
+	if (IS_NAN(v2[0]) || IS_NAN(v2[1]) || IS_NAN(v2[2]))
+		v2[0] = v2[1] = v2[2] = 0;
+
+	trace = SV_ClipMoveToEntity( ent, p0, vec3_origin, vec3_origin, p1 );
+
+	pr_global_struct->trace_allsolid   = trace.allsolid;
+	pr_global_struct->trace_startsolid = trace.startsolid;
+	pr_global_struct->trace_fraction   = trace.fraction;
+	pr_global_struct->trace_inwater    = trace.inwater;
+	pr_global_struct->trace_inopen     = trace.inopen;
+	v3copy( pr_global_struct->trace_endpos, trace.endpos );
+	v3copy( pr_global_struct->trace_plane_normal, trace.plane.normal );
+	pr_global_struct->trace_plane_dist = trace.plane.dist;
+	pr_global_struct->trace_ent = EDICT_TO_PROG (sv.edicts );
+	if( trace.fraction == 1.0f )
+		return;
+
+	qmodel_t *mod = sv.models[ (int32)ent->v.modelindex ];
+	if( !mod )
+		return;
+
+	if( mod->type != mod_alias ){
+		pr_global_struct->trace_ent = EDICT_TO_PROG( trace.ent );
+		return;
+	}
+
+	aliashdr_t *hdr  = (aliashdr_t *) Mod_Extradata( mod );
+	coll_tri_t *tris = (coll_tri_t *)( (intptr_t)hdr + hdr->coll_tris );
+	frameref_t  ref  = frameref_make( ent->v.origin, ent->v.angles );
+
+	int32 frame    = (int32)ent->v.frame;
+	int32 pose     = hdr->frames[ frame ].firstpose;
+
+	// stolen from R_SetupAliasFrame
+	int32 numposes = hdr->frames[ frame ].numposes;
+	if (numposes > 1 ){
+		pose += (int)(sv.time / hdr->frames[frame].interval ) % numposes;
+	}
+
+	/*
+	static qboolean first = true;
+	if( first ){
+		coll_tris_dump_obj( &tris[ pose * hdr->numtris ], hdr->numtris, mod->name );
+		first = !first;
+	}
+	*/
+
+	qboolean collision = 0;
+	coll_tri_t *tri = NULL;
+	ray_t ray = ray_make( p0, p1 );
+	len = ray.len;
+
+	//NOT OPTIMIZED, but is easier to understand and works
+	//ideally, we would pass ray by reference eliminate the repeated ray_make call,
+	//but this works and thats what i really care about (perfomance is fine...)
+	ray = ray_local( ray, &ref );
+	fplane_t plane;
+	v3copy( p0, ray.o );
+	v3copy( p1, ray.e );
+	for( int32 i = 0; i < hdr->numtris; i++ ){
+		tri =  &tris[ pose * hdr->numtris + i ];
+		if( !coll_tri_ray_isect( tri, ray, p1, NULL, NULL, NULL ) )
+			continue;
+		plane = tri->plane;
+		v3muls( plane.n, -1.0f );
+		plane.dist *= -1.0f;
+		ray = ray_make( p0, p1 );
+		collision = true;
+	}
+	if( !collision ){
+		pr_global_struct->trace_ent = EDICT_TO_PROG( sv.edicts );
+		pr_global_struct->trace_fraction = 1.0f;
+		return;
+	}
+
+	ray = ray_world( ray, &ref );
+	plane = plane_world( &ref, plane );
+
+	v3copy( pr_global_struct->trace_endpos, ray.e );
+	v3copy( pr_global_struct->trace_plane_normal, plane.n );
+	pr_global_struct->trace_plane_dist = plane.dist;
+	pr_global_struct->trace_ent = EDICT_TO_PROG( ent );
+	pr_global_struct->trace_fraction = ray.len / len;
+}
+
 
 /*
 =================
@@ -1789,7 +1910,8 @@ static builtin_t pr_builtin[] =
 	PF_WriteString,
 	PF_WriteEntity,
 
-	PF_Fixme,
+	//FXR
+	PF_trace_entity,	//60
 	PF_Fixme,
 	PF_Fixme,
 	PF_Fixme,

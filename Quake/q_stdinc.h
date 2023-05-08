@@ -123,6 +123,18 @@ COMPILE_TIME_ASSERT(enum, sizeof(THE_DUMMY_ENUM) == sizeof(int));
 
 typedef unsigned char		byte;
 
+// FXR
+typedef int8_t  int8;
+typedef int16_t int16;
+typedef int32_t int32;
+typedef int64_t int64;
+
+typedef uint8_t  uint8;
+typedef uint16_t uint16;
+typedef uint32_t uint32;
+typedef uint64_t uint64;
+
+
 #undef true
 #undef false
 #if defined(__cplusplus)
@@ -146,6 +158,7 @@ COMPILE_TIME_ASSERT(qboolean, sizeof(qboolean) == 4);
 
 /* math */
 typedef float	vec_t;
+typedef vec_t	vec2_t[2];
 typedef vec_t	vec3_t[3];
 typedef vec_t	vec4_t[4];
 typedef vec_t	vec5_t[5];
@@ -153,6 +166,25 @@ typedef int	fixed4_t;
 typedef int	fixed8_t;
 typedef int	fixed16_t;
 
+//FXR
+typedef vec2_t vec2;
+typedef vec3_t vec3;
+typedef vec4_t vec4;
+
+typedef float mat2x2[2][2];
+typedef float mat3x3[3][3];
+typedef float mat4x4[4][4];
+
+#define CONSTM2X2(m2x2) ( (const vec2*)(const void*)m2x2 )
+#define CONSTM3X3(m3x3) ( (const vec3*)(const void*)m3x3 )
+#define CONSTM4X4(m4x4) ( (const vec4*)(const void*)m4x4 )
+
+/* misc */
+#define SWAP( a, b )	{ \
+	__typeof__(a) t = a;	\
+	a = b;	\
+	b = t;	\
+}	\
 
 /*==========================================================================*/
 

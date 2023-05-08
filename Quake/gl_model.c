@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // on the same machine.
 
 #include "quakedef.h"
+#include "collision.h"	//FXR
 
 qmodel_t	*loadmodel;
 char	loadname[32];	// for hunk tags
@@ -2310,6 +2311,7 @@ aliashdr_t	*pheader;
 
 stvert_t	stverts[MAXALIASVERTS];
 mtriangle_t	triangles[MAXALIASTRIS];
+vec3 poseverts_decomp[ MAXALIASFRAMES ][ MAXALIASVERTS ];
 
 // a pose is a single set of vertexes.  a frame may be
 // an animating sequence of poses
@@ -2618,6 +2620,7 @@ void Mod_CalcAliasBounds (aliashdr_t *a)
 	for (i=0 ; i<a->numposes; i++)
 		for (j=0; j<a->numverts; j++)
 		{
+
 			for (k=0; k<3;k++)
 				v[k] = poseverts[i][j].v[k] * pheader->scale[k] + pheader->scale_origin[k];
 
@@ -2645,6 +2648,7 @@ void Mod_CalcAliasBounds (aliashdr_t *a)
 	loadmodel->ymaxs[0] = loadmodel->ymaxs[1] = yawradius;
 	loadmodel->ymins[2] = loadmodel->mins[2];
 	loadmodel->ymaxs[2] = loadmodel->maxs[2];
+
 }
 
 static qboolean
@@ -2707,6 +2711,63 @@ void Mod_SetExtraFlags (qmodel_t *mod)
 		!strcmp (mod->name, "progs/boss.mdl"))
 		mod->flags |= MOD_FBRIGHTHACK;
 }
+
+//FXR
+void Mod_LoadAliasCollision( aliashdr_t *hdr ){
+	int i, j, k;
+
+	/*
+	static qboolean first = true;
+	if( first ){
+		FILE *fp = fopen( "debug/Mod_LoadAliasData.txt", "w" );
+		fclose( fp );
+		first = false;
+	}
+	FILE *fp = fopen( "debug/Mod_LoadAliasData.txt", "a" );
+
+	fprintf( fp, "*** model %s *** \n", loadname );
+	fprintf( fp, " * scale......: %f,%f,%f\n", hdr->scale[0],
+			                                   hdr->scale[1],
+											   hdr->scale[2] );
+	fprintf( fp, " * origin.....: %f,%f,%f\n", hdr->scale_origin[0],
+			                                   hdr->scale_origin[1],
+											   hdr->scale_origin[2] );
+	fprintf( fp, " * # of poses.: %d\n", hdr->numposes );
+	fprintf( fp, " * # of tris..: %d\n", hdr->numtris );
+	fprintf( fp, " * # of verts.: %d\n", hdr->numverts );
+	fprintf( fp, " * # of frames: %d\n", hdr->numframes );
+	for( i = 0; i < hdr->numframes; i++ )
+		fprintf( fp, " *  - frame %d name: %s\n", i, hdr->frames[i].name );
+	*/
+
+	coll_tri_t *coll_tris = (coll_tri_t *) Hunk_Alloc(
+			hdr->numposes * hdr->numtris * sizeof(coll_tri_t) );
+
+	hdr->coll_tris = (intptr_t)coll_tris - (intptr_t)hdr;
+
+	int32 c = 0;
+	for( i = 0; i < hdr->numposes; i++ )
+		for( j = 0; j < hdr->numtris; j++ ){
+			mtriangle_t *t = &triangles[j];
+			int v0 = t->vertindex[0];
+			int v1 = t->vertindex[1];
+			int v2 = t->vertindex[2];
+
+			vec3 p0, p1, p2;
+			for( k = 0; k < 3; k++ ){
+				p0[k] = poseverts[i][v0].v[k] * hdr->scale[k] + hdr->scale_origin[k];
+				p1[k] = poseverts[i][v1].v[k] * hdr->scale[k] + hdr->scale_origin[k];
+				p2[k] = poseverts[i][v2].v[k] * hdr->scale[k] + hdr->scale_origin[k];
+			}
+			coll_tris[c++] = coll_tri_make( p0, p1, p2 );
+		}
+	/*
+	fprintf( fp, " * # of collision tris: %d\n", c );
+	fprintf( fp, "******\n\n" );
+	fclose ( fp );
+	*/
+}
+
 
 /*
 =================
@@ -2847,6 +2908,8 @@ void Mod_LoadAliasModel (qmodel_t *mod, void *buffer)
 
 	Mod_CalcAliasBounds (pheader); //johnfitz
 
+	Mod_LoadAliasCollision(pheader);	//FXR
+
 	//
 	// build the draw lists
 	//
@@ -2864,6 +2927,8 @@ void Mod_LoadAliasModel (qmodel_t *mod, void *buffer)
 	memcpy (mod->cache.data, pheader, total);
 
 	Hunk_FreeToLowMark (start);
+
+	Sys_Printf( "%s - loaded model '%s'\n", __FUNCTION__, mod->name );
 }
 
 //=============================================================================
