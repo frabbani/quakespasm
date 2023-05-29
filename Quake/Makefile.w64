@@ -81,6 +81,10 @@ endif
 SDL_CFLAGS  := -I/usr/local/include/SDL -D_GNU_SOURCE=1 -Dmain=SDL_main
 SDL_LIBS    := -L/usr/local/lib -lmingw32 -lSDLmain -lSDL -mwindows
 
+MYGL_CFLAGS := -I/home/frabb/workspace/mygl/public
+MYGL_LIBS   := -L/home/frabb/workspace/mygl/Debug -lmygl -lglew32
+
+
 DEFWINSOCK :=-D_USE_WINSOCK2
 LIBWINSOCK := -lws2_32
 
@@ -167,7 +171,7 @@ CFLAGS+= $(CODEC_INC)
 
 COMMON_LIBS:= -lopengl32 -lwinmm
 
-LIBS := $(COMMON_LIBS) $(NET_LIBS) $(CODEC_LINK) $(CODECLIBS)
+LIBS := $(COMMON_LIBS) $(NET_LIBS) $(CODEC_LINK) $(CODECLIBS) $(MYGL_LIBS)
 
 # ---------------------------
 # targets
@@ -182,7 +186,7 @@ DEFAULT_TARGET := quakespasm.exe
 # ---------------------------
 
 %.o:	%.c
-	$(CC) $(DFLAGS) -c $(CFLAGS) $(SDL_CFLAGS) -o $@ $<
+	$(CC) $(DFLAGS) -c $(CFLAGS) $(SDL_CFLAGS) $(MYGL_CFLAGS) -o $@ $<
 %.res:	../Windows/%.rc
 	$(WINDRES) -I../Windows --output-format=coff --target=pe-x86-64 -o $@ $<
 

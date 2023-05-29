@@ -23,7 +23,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "quakedef.h"
 
-
 /*
 =================================================================
 
@@ -490,10 +489,10 @@ static void GLMesh_LoadVertexBuffer (qmodel_t *m, const aliashdr_t *hdr)
 
 // upload indices buffer
 
-	GL_DeleteBuffersFunc (1, &m->meshindexesvbo);
-	GL_GenBuffersFunc (1, &m->meshindexesvbo);
-	GL_BindBufferFunc (GL_ELEMENT_ARRAY_BUFFER, m->meshindexesvbo);
-	GL_BufferDataFunc (GL_ELEMENT_ARRAY_BUFFER, hdr->numindexes * sizeof (unsigned short), indexes, GL_STATIC_DRAW);
+	glDeleteBuffers( 1, &m->meshindexesvbo );
+	glGenBuffers   ( 1, &m->meshindexesvbo );
+	glBindBuffer   ( GL_ELEMENT_ARRAY_BUFFER, m->meshindexesvbo );
+	glBufferData   ( GL_ELEMENT_ARRAY_BUFFER, hdr->numindexes * sizeof (unsigned short), indexes, GL_STATIC_DRAW );
 
 // create the vertex buffer (empty)
 
@@ -545,10 +544,10 @@ static void GLMesh_LoadVertexBuffer (qmodel_t *m, const aliashdr_t *hdr)
 	}
 
 // upload vertexes buffer
-	GL_DeleteBuffersFunc (1, &m->meshvbo);
-	GL_GenBuffersFunc (1, &m->meshvbo);
-	GL_BindBufferFunc (GL_ARRAY_BUFFER, m->meshvbo);
-	GL_BufferDataFunc (GL_ARRAY_BUFFER, totalvbosize, vbodata, GL_STATIC_DRAW);
+	glDeleteBuffers( 1, &m->meshvbo );
+	glGenBuffers   ( 1, &m->meshvbo );
+	glBindBuffer   ( GL_ARRAY_BUFFER, m->meshvbo );
+	glBufferData   ( GL_ARRAY_BUFFER, totalvbosize, vbodata, GL_STATIC_DRAW );
 
 	free (vbodata);
 

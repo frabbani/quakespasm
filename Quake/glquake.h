@@ -160,28 +160,42 @@ extern int		gl_stencilbits;
 // Multitexture
 extern	qboolean	mtexenabled;
 extern	qboolean	gl_mtexable;
-extern PFNGLMULTITEXCOORD2FARBPROC  GL_MTexCoord2fFunc;
-extern PFNGLACTIVETEXTUREARBPROC    GL_SelectTextureFunc;
-extern PFNGLCLIENTACTIVETEXTUREARBPROC	GL_ClientActiveTextureFunc;
+
 extern GLint		gl_max_texture_units; //ericw
 
 //johnfitz -- anisotropic filtering
-#define	GL_TEXTURE_MAX_ANISOTROPY_EXT		0x84FE
-#define	GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT	0x84FF
+//#define	GL_TEXTURE_MAX_ANISOTROPY_EXT		0x84FE
+//#define	GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT	0x84FF
 extern	float		gl_max_anisotropy;
 extern	qboolean	gl_anisotropy_able;
+extern	qboolean	gl_vbo_able;
+
 
 //ericw -- VBO
+/*
+extern PFNGLMULTITEXCOORD2FARBPROC  GL_MTexCoord2fFunc;
+extern PFNGLACTIVETEXTUREARBPROC    GL_SelectTextureFunc;
+extern PFNGLCLIENTACTIVETEXTUREARBPROC	GL_ClientActiveTextureFunc;
+
 extern PFNGLBINDBUFFERARBPROC  GL_BindBufferFunc;
 extern PFNGLBUFFERDATAARBPROC  GL_BufferDataFunc;
 extern PFNGLBUFFERSUBDATAARBPROC  GL_BufferSubDataFunc;
 extern PFNGLDELETEBUFFERSARBPROC  GL_DeleteBuffersFunc;
 extern PFNGLGENBUFFERSARBPROC  GL_GenBuffersFunc;
-extern	qboolean	gl_vbo_able;
-//ericw
+*/
+
+#define GL_MTexCoord2fFunc glMultiTexCoord2f
+#define GL_SelectTextureFunc glActiveTexture
+#define GL_ClientActiveTextureFunc glClientActiveTexture
+
+#define GL_BindBufferFunc glBindBuffer
+#define GL_BufferDataFunc glBufferData
+#define GL_BufferSubDataFunc glBufferSubData
+#define GL_DeleteBuffersFunc glDeleteBuffers
+#define GL_GenBuffersFunc glGenBuffers
 
 //ericw -- GLSL
-
+/*
 // SDL 1.2 has a bug where it doesn't provide these typedefs on OS X!
 typedef GLuint (APIENTRYP QS_PFNGLCREATESHADERPROC) (GLenum type);
 typedef void (APIENTRYP QS_PFNGLDELETESHADERPROC) (GLuint shader);
@@ -230,6 +244,9 @@ extern QS_PFNGLUNIFORM1IPROC GL_Uniform1iFunc;
 extern QS_PFNGLUNIFORM1FPROC GL_Uniform1fFunc;
 extern QS_PFNGLUNIFORM3FPROC GL_Uniform3fFunc;
 extern QS_PFNGLUNIFORM4FPROC GL_Uniform4fFunc;
+*/
+
+
 extern	qboolean	gl_glsl_able;
 extern	qboolean	gl_glsl_gamma_able;
 extern	qboolean	gl_glsl_alias_able;

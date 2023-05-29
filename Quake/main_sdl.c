@@ -31,6 +31,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #else
 #include "SDL.h"
 #endif
+
+
 #include <stdio.h>
 
 #if defined(USE_SDL2)
@@ -54,10 +56,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #endif
 
+
 static void Sys_AtExit (void)
 {
 	SDL_Quit();
 }
+
 
 static void Sys_InitSDL (void)
 {
@@ -84,7 +88,6 @@ static void Sys_InitSDL (void)
 	{
 		Sys_Error("Couldn't init SDL: %s", SDL_GetError());
 	}
-	atexit(Sys_AtExit);
 }
 
 #define DEFAULT_MEMORY (256 * 1024 * 1024) // ericw -- was 72MB (64-bit) / 64MB (32-bit)

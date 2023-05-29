@@ -222,6 +222,8 @@ typedef struct
 #include "progs.h"
 #include "server.h"
 
+#include "mygl.h"
+
 #include "platform.h"
 #if defined(SDL_FRAMEWORK) || defined(NO_SDL_CONFIG)
 #if defined(USE_SDL2)
@@ -261,6 +263,7 @@ typedef struct
 #include "cdaudio.h"
 #include "glquake.h"
 
+extern MyGL *myGL;
 
 //=============================================================================
 

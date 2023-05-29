@@ -175,9 +175,9 @@ static void GLSLGamma_CreateShaders (void)
 	r_gamma_program = GL_CreateProgram (vertSource, fragSource, 0, NULL);
 
 // get uniform locations
-	gammaLoc = GL_GetUniformLocation (&r_gamma_program, "GammaValue");
-	contrastLoc = GL_GetUniformLocation (&r_gamma_program, "ContrastValue");
-	textureLoc = GL_GetUniformLocation (&r_gamma_program, "GammaTexture");
+	gammaLoc = glGetUniformLocation( r_gamma_program, "GammaValue");
+	contrastLoc = glGetUniformLocation( r_gamma_program, "ContrastValue");
+	textureLoc = glGetUniformLocation( r_gamma_program, "GammaTexture");
 }
 
 /*
@@ -231,10 +231,10 @@ void GLSLGamma_GammaCorrect (void)
 	glCopyTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, glx, gly, glwidth, glheight);
 
 // draw the texture back to the framebuffer with a fragment shader
-	GL_UseProgramFunc (r_gamma_program);
-	GL_Uniform1fFunc (gammaLoc, vid_gamma.value);
-	GL_Uniform1fFunc (contrastLoc, q_min(2.0, q_max(1.0, vid_contrast.value)));
-	GL_Uniform1iFunc (textureLoc, 0); // use texture unit 0
+	glUseProgram( r_gamma_program );
+	glUniform1f ( gammaLoc, vid_gamma.value);
+	glUniform1f ( contrastLoc, q_min(2.0, q_max(1.0, vid_contrast.value)));
+	glUniform1f ( textureLoc, 0 ); // use texture unit 0
 
 	glDisable (GL_ALPHA_TEST);
 	glDisable (GL_DEPTH_TEST);
@@ -255,7 +255,7 @@ void GLSLGamma_GammaCorrect (void)
 	glVertex2f (-1, 1);
 	glEnd ();
 
-	GL_UseProgramFunc (0);
+	glUseProgram( 0 );
 
 // clear cached binding
 	GL_ClearBindings ();
@@ -907,7 +907,7 @@ void R_RenderScene (void)
 
 	Fog_DisableGFog (); //johnfitz
 
-	R_DrawViewModel (); //johnfitz -- moved here from R_RenderView
+  	R_DrawViewModel (); //johnfitz -- moved here from R_RenderView
 
 	R_ShowTris (); //johnfitz
 

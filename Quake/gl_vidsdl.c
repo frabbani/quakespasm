@@ -80,6 +80,12 @@ static SDL_GLContext	gl_context;
 static SDL_Surface	*draw_context;
 #endif
 
+//FXR
+MyGL *myGL = NULL;
+void logger( const char *str ){
+	Sys_Printf( "%s", str );
+}
+
 static qboolean	vid_locked = false; //johnfitz
 static qboolean	vid_changed = false;
 
@@ -110,6 +116,7 @@ qboolean gl_glsl_gamma_able = false; //ericw
 qboolean gl_glsl_alias_able = false; //ericw
 int gl_stencilbits;
 
+/*
 PFNGLMULTITEXCOORD2FARBPROC GL_MTexCoord2fFunc = NULL; //johnfitz
 PFNGLACTIVETEXTUREARBPROC GL_SelectTextureFunc = NULL; //johnfitz
 PFNGLCLIENTACTIVETEXTUREARBPROC GL_ClientActiveTextureFunc = NULL; //ericw
@@ -142,6 +149,7 @@ QS_PFNGLUNIFORM1IPROC GL_Uniform1iFunc = NULL; //ericw
 QS_PFNGLUNIFORM1FPROC GL_Uniform1fFunc = NULL; //ericw
 QS_PFNGLUNIFORM3FPROC GL_Uniform3fFunc = NULL; //ericw
 QS_PFNGLUNIFORM4FPROC GL_Uniform4fFunc = NULL; //ericw
+*/
 
 //====================================
 
@@ -696,6 +704,7 @@ static qboolean VID_SetMode (int width, int height, int refreshrate, int bpp, qb
 	bpp = SDL_VideoModeOK(width, height, bpp, flags);
 
 	draw_context = SDL_SetVideoMode(width, height, bpp, flags);
+
 	if (!draw_context) { // scale back fsaa
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
@@ -1002,6 +1011,7 @@ static void GL_CheckExtensions (void)
 		Con_Warning ("OpenGL version < 1.5, skipping ARB_vertex_buffer_object check\n");
 	else
 	{
+		/*
 		GL_BindBufferFunc = (PFNGLBINDBUFFERARBPROC) SDL_GL_GetProcAddress("glBindBufferARB");
 		GL_BufferDataFunc = (PFNGLBUFFERDATAARBPROC) SDL_GL_GetProcAddress("glBufferDataARB");
 		GL_BufferSubDataFunc = (PFNGLBUFFERSUBDATAARBPROC) SDL_GL_GetProcAddress("glBufferSubDataARB");
@@ -1016,6 +1026,8 @@ static void GL_CheckExtensions (void)
 		{
 			Con_Warning ("ARB_vertex_buffer_object not available\n");
 		}
+		*/
+		gl_vbo_able = true;
 	}
 
 	// multitexture
@@ -1024,6 +1036,7 @@ static void GL_CheckExtensions (void)
 		Con_Warning ("Mutitexture disabled at command line\n");
 	else if (GL_ParseExtensionList(gl_extensions, "GL_ARB_multitexture"))
 	{
+		/*
 		GL_MTexCoord2fFunc = (PFNGLMULTITEXCOORD2FARBPROC) SDL_GL_GetProcAddress("glMultiTexCoord2fARB");
 		GL_SelectTextureFunc = (PFNGLACTIVETEXTUREARBPROC) SDL_GL_GetProcAddress("glActiveTextureARB");
 		GL_ClientActiveTextureFunc = (PFNGLCLIENTACTIVETEXTUREARBPROC) SDL_GL_GetProcAddress("glClientActiveTextureARB");
@@ -1039,6 +1052,10 @@ static void GL_CheckExtensions (void)
 		{
 			Con_Warning ("Couldn't link to multitexture functions\n");
 		}
+		*/
+		gl_mtexable = true;
+		glGetIntegerv( GL_MAX_TEXTURE_UNITS, &gl_max_texture_units );
+		Con_Printf("GL_MAX_TEXTURE_UNITS: %d\n", (int)gl_max_texture_units);
 	}
 	else
 	{
@@ -1182,6 +1199,7 @@ static void GL_CheckExtensions (void)
 		Con_Warning ("GLSL disabled at command line\n");
 	else if (gl_version_major >= 2)
 	{
+		/*
 		GL_CreateShaderFunc = (QS_PFNGLCREATESHADERPROC) SDL_GL_GetProcAddress("glCreateShader");
 		GL_DeleteShaderFunc = (QS_PFNGLDELETESHADERPROC) SDL_GL_GetProcAddress("glDeleteShader");
 		GL_DeleteProgramFunc = (QS_PFNGLDELETEPROGRAMPROC) SDL_GL_GetProcAddress("glDeleteProgram");
@@ -1237,6 +1255,8 @@ static void GL_CheckExtensions (void)
 		{
 			Con_Warning ("GLSL not available\n");
 		}
+		*/
+		gl_glsl_able = true;
 	}
 	else
 	{
@@ -1305,6 +1325,9 @@ GL_Init
 */
 static void GL_Init (void)
 {
+	if( !myGL )
+		myGL = MyGL_initialize( logger, 1, 8192 );
+
 	gl_vendor = (const char *) glGetString (GL_VENDOR);
 	gl_renderer = (const char *) glGetString (GL_RENDERER);
 	gl_version = (const char *) glGetString (GL_VERSION);
