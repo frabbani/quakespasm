@@ -182,7 +182,7 @@ extern PFNGLBUFFERDATAARBPROC  GL_BufferDataFunc;
 extern PFNGLBUFFERSUBDATAARBPROC  GL_BufferSubDataFunc;
 extern PFNGLDELETEBUFFERSARBPROC  GL_DeleteBuffersFunc;
 extern PFNGLGENBUFFERSARBPROC  GL_GenBuffersFunc;
-*/
+
 
 #define GL_MTexCoord2fFunc glMultiTexCoord2f
 #define GL_SelectTextureFunc glActiveTexture
@@ -195,7 +195,7 @@ extern PFNGLGENBUFFERSARBPROC  GL_GenBuffersFunc;
 #define GL_GenBuffersFunc glGenBuffers
 
 //ericw -- GLSL
-/*
+
 // SDL 1.2 has a bug where it doesn't provide these typedefs on OS X!
 typedef GLuint (APIENTRYP QS_PFNGLCREATESHADERPROC) (GLenum type);
 typedef void (APIENTRYP QS_PFNGLDELETESHADERPROC) (GLuint shader);

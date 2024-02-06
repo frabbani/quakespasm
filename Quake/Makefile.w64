@@ -81,8 +81,8 @@ endif
 SDL_CFLAGS  := -I/usr/local/include/SDL -D_GNU_SOURCE=1 -Dmain=SDL_main
 SDL_LIBS    := -L/usr/local/lib -lmingw32 -lSDLmain -lSDL -mwindows
 
-MYGL_CFLAGS := -I/home/frabb/workspace/mygl/public
-MYGL_LIBS   := -L/home/frabb/workspace/mygl/Debug -lmygl -lglew32
+MYGL_CFLAGS := -I/home/frabb/git_uploads/mygl/mygl/public
+MYGL_LIBS   := -L/home/frabb/git_uploads/mygl/mygl/Debug -lmygl -lglew32
 
 
 DEFWINSOCK :=-D_USE_WINSOCK2
