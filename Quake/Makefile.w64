@@ -5,7 +5,7 @@
 # "make SDL_CONFIG=/path/to/sdl-config" to override the locally included SDL versions.
 
 ### Enable/disable SDL2
-USE_SDL2=0
+USE_SDL2=1
 
 ### Enable/disable codecs for streaming music support
 USE_CODEC_WAVE=1
@@ -70,16 +70,19 @@ CFLAGS += -DUSE_SDL2
 endif
 
 # default to our local SDL[2] for build
-ifeq ($(USE_SDL2),1)
-SDL_CONFIG ?=../Windows/SDL2/bin/sdl2-config --prefix=../Windows/SDL2 --lib-suffix=64
-else
-SDL_CONFIG ?=../Windows/SDL/bin/sdl-config --prefix=../Windows/SDL --lib-suffix=64
-endif
+# ifeq ($(USE_SDL2),1)
+# SDL_CONFIG ?=../Windows/SDL2/bin/sdl2-config --prefix=../Windows/SDL2 --lib-suffix=64
+# else
+# SDL_CONFIG ?=../Windows/SDL/bin/sdl-config --prefix=../Windows/SDL --lib-suffix=64
+# endif
 # SDL_CFLAGS := $(shell $(SDL_CONFIG) --cflags)
 # SDL_LIBS   := $(shell $(SDL_CONFIG) --libs)
 
-SDL_CFLAGS  := -I/usr/local/include/SDL -D_GNU_SOURCE=1 -Dmain=SDL_main
-SDL_LIBS    := -L/usr/local/lib -lmingw32 -lSDLmain -lSDL -mwindows
+# SDL_CFLAGS  := -I/usr/local/include/SDL -D_GNU_SOURCE=1 -Dmain=SDL_main
+# SDL_LIBS    := -L/usr/local/lib -lmingw32 -lSDLmain -lSDL -mwindows
+
+SDL_CFLAGS  := -I/c/msys64/mingw64/include/SDL2 -Dmain=SDL_main
+SDL_LIBS    := -L/c/msys64/mingw64/lib -lmingw32 -lSDL2main -lSDL2 -mwindows
 
 MYGL_CFLAGS := -I/home/frabb/git_uploads/mygl/mygl/public
 MYGL_LIBS   := -L/home/frabb/git_uploads/mygl/mygl/Debug -lmygl -lglew32

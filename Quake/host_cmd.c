@@ -22,6 +22,9 @@
  */
 
 #include "quakedef.h"
+
+#undef _WIN32
+
 #ifndef _WIN32
 #include <dirent.h>
 #endif
@@ -109,8 +112,8 @@ void ExtraMaps_Init( void ){
   WIN32_FIND_DATA fdat;
   HANDLE fhnd;
 #else
-	DIR		*dir_p;
-	struct dirent	*dir_t;
+  DIR *dir_p;
+  struct dirent *dir_t;
 #endif
   char filestring[MAX_OSPATH];
   char mapname[32];
@@ -139,18 +142,18 @@ void ExtraMaps_Init( void ){
       while( FindNextFile( fhnd, &fdat ) );
       FindClose( fhnd );
 #else
-			q_snprintf (filestring, sizeof(filestring), "%s/maps/", search->filename);
-			dir_p = opendir(filestring);
-			if (dir_p == NULL)
-				continue;
-			while ((dir_t = readdir(dir_p)) != NULL)
-			{
-				if (q_strcasecmp(COM_FileGetExtension(dir_t->d_name), "bsp") != 0)
-					continue;
-				COM_StripExtension(dir_t->d_name, mapname, sizeof(mapname));
-				ExtraMaps_Add (mapname);
-			}
-			closedir(dir_p);
+      q_snprintf( filestring, sizeof( filestring ), "%s/maps/",
+                  search->filename );
+      dir_p = opendir( filestring );
+      if( dir_p == NULL )
+        continue;
+      while( ( dir_t = readdir( dir_p ) ) != NULL ){
+        if( q_strcasecmp( COM_FileGetExtension( dir_t->d_name ), "bsp" ) != 0 )
+          continue;
+        COM_StripExtension( dir_t->d_name, mapname, sizeof( mapname ) );
+        ExtraMaps_Add( mapname );
+      }
+      closedir( dir_p );
 #endif
     }
     else //pakfile
@@ -236,33 +239,32 @@ void Modlist_Init( void ){
   FindClose( fhnd );
 }
 #else
-void Modlist_Init (void)
-{
-	DIR		*dir_p, *mod_dir_p;
-	struct dirent	*dir_t;
-	char		dir_string[MAX_OSPATH], mod_string[MAX_OSPATH];
+void Modlist_Init( void ){
+  DIR *dir_p, *mod_dir_p;
+  struct dirent *dir_t;
+  char dir_string[MAX_OSPATH], mod_string[MAX_OSPATH];
 
-	q_snprintf (dir_string, sizeof(dir_string), "%s/", com_basedir);
-	dir_p = opendir(dir_string);
-	if (dir_p == NULL)
-		return;
+  q_snprintf( dir_string, sizeof( dir_string ), "%s/", com_basedir );
+  dir_p = opendir( dir_string );
+  if( dir_p == NULL )
+    return;
 
-	while ((dir_t = readdir(dir_p)) != NULL)
-	{
-		if (!strcmp(dir_t->d_name, ".") || !strcmp(dir_t->d_name, ".."))
-			continue;
-		if (!q_strcasecmp (COM_FileGetExtension (dir_t->d_name), "app")) // skip .app bundles on macOS
-			continue;
-		q_snprintf(mod_string, sizeof(mod_string), "%s%s/", dir_string, dir_t->d_name);
-		mod_dir_p = opendir(mod_string);
-		if (mod_dir_p == NULL)
-			continue;
-		/* don't bother testing for pak files / progs.dat */
-		Modlist_Add(dir_t->d_name);
-		closedir(mod_dir_p);
-	}
+  while( ( dir_t = readdir( dir_p ) ) != NULL ){
+    if( !strcmp( dir_t->d_name, "." ) || !strcmp( dir_t->d_name, ".." ) )
+      continue;
+    if( !q_strcasecmp( COM_FileGetExtension( dir_t->d_name ), "app" ) ) // skip .app bundles on macOS
+      continue;
+    q_snprintf( mod_string, sizeof( mod_string ), "%s%s/", dir_string,
+                dir_t->d_name );
+    mod_dir_p = opendir( mod_string );
+    if( mod_dir_p == NULL )
+      continue;
+    /* don't bother testing for pak files / progs.dat */
+    Modlist_Add( dir_t->d_name );
+    closedir( mod_dir_p );
+  }
 
-	closedir(dir_p);
+  closedir( dir_p );
 }
 #endif
 
@@ -287,8 +289,8 @@ void DemoList_Init( void ){
   WIN32_FIND_DATA fdat;
   HANDLE fhnd;
 #else
-	DIR		*dir_p;
-	struct dirent	*dir_t;
+  DIR *dir_p;
+  struct dirent *dir_t;
 #endif
   char filestring[MAX_OSPATH];
   char demname[32];
@@ -317,18 +319,17 @@ void DemoList_Init( void ){
       while( FindNextFile( fhnd, &fdat ) );
       FindClose( fhnd );
 #else
-			q_snprintf (filestring, sizeof(filestring), "%s/", search->filename);
-			dir_p = opendir(filestring);
-			if (dir_p == NULL)
-				continue;
-			while ((dir_t = readdir(dir_p)) != NULL)
-			{
-				if (q_strcasecmp(COM_FileGetExtension(dir_t->d_name), "dem") != 0)
-					continue;
-				COM_StripExtension(dir_t->d_name, demname, sizeof(demname));
-				FileList_Add (demname, &demolist);
-			}
-			closedir(dir_p);
+      q_snprintf( filestring, sizeof( filestring ), "%s/", search->filename );
+      dir_p = opendir( filestring );
+      if( dir_p == NULL )
+        continue;
+      while( ( dir_t = readdir( dir_p ) ) != NULL ){
+        if( q_strcasecmp( COM_FileGetExtension( dir_t->d_name ), "dem" ) != 0 )
+          continue;
+        COM_StripExtension( dir_t->d_name, demname, sizeof( demname ) );
+        FileList_Add( demname, &demolist );
+      }
+      closedir( dir_p );
 #endif
     }
     else //pakfile
