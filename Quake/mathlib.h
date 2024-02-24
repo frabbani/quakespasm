@@ -122,55 +122,56 @@ float anglemod(float a);
 		BoxOnPlaneSide( (emins), (emaxs), (p)))
 
 //orthonormal basis
-typedef struct basis_s {
+typedef struct Basis_s {
   union {
     struct {
-      vec3 f, r, u;
+      Vec3 f, r, u;
     };
-    vec3 fru[3];
+    Vec3 fru[3];
   };
-} basis_t;
+} Basis;
 
 // FXR
 
 #define TOL	(1e-7f)
-#define TOL_SQ	(TOL*TOL)
+#define TOL_SQ	(1e-14f)
 
-typedef struct frameref_s {
-  vec3 p, p_loc;
-  basis_t basis;
-  vec3 angles;
-} frameref_t;
-
-frameref_t frameref_make(const vec3 p, const vec3 angles);
-void frameref_local(const frameref_t *ref, vec3 p);
-void frameref_world(const frameref_t *ref, vec3 p);
-void frameref_world_v(const frameref_t *ref, vec3 v);
-
-//plane struct already exists in world.h
 typedef struct Plane_s {
-  vec3 n;
+  Vec3 n;
   float dist;
 } Plane;
 
-fplane_t plane_make(const vec3 p, const vec3 n);
-fplane_t plane_world(const frameref_t *ref, fplane_t plane);
+Plane makePlane(Vec3 p, Vec3 n);
 
-typedef struct ray_s {
+typedef struct Ray_s {
   union {
-    vec3 ps[2];
+    Vec3 ps[2];
     struct {
-      vec3 o, e;	//origin/end
+      Vec3 o, e;  //origin/end
     };
   };
-  vec3 d;     //direction unit vector
-  float len;	  //v1 + len*d = v2
-} ray_t;
+  Vec3 d;     //direction unit vector
+  float len;    //v1 + len*d = v2
+} Ray;
 
-ray_t ray_make(const vec3 p0, const vec3 p1);
-ray_t ray_local(ray_t ray, const frameref_t *ref);
-ray_t ray_world(ray_t ray, const frameref_t *ref);
-qboolean ray_plane_isect(ray_t ray, const vec3 plane_n, float plane_dist, vec3 p);
+Ray makeRay(Vec3 p, Vec3 p2);
+qboolean rayIsectPlane(const Ray *ray, Plane plane, vec3 *p, float *dist);
+
+typedef struct Transform_s {
+  Vec3 p, p_loc;
+  Vec3 angles;
+  Basis basis;
+} Transform;
+
+typedef enum TransformSpace_e {
+  LocalSpace,
+  WorldSpace,
+} TransformSpace;
+
+Transform makeTransform(Vec3 p, Vec3 angles);
+Vec3 transformVec(const Transform *transform, Vec3 p, TransformSpace space, qboolean direction_only);
+Plane transformPlane(const Transform *transform, Plane plane, TransformSpace space);
+Ray transformRay(const Transform *transform, const Ray *ray, TransformSpace space);
 
 #endif	/* __MATHLIB_H */
 

@@ -10,6 +10,14 @@ MyGL *mygl = NULL;
 
 MYGLSTRNFUNCS(64);
 
+Vec2 vec2_(float x, float y) {
+  return MyGL_vec2(x, y);
+}
+
+Vec2 vec2Transf(Mat2 M, Vec2 v) {
+  return MyGL_vec2Transf(M, v);
+}
+
 static Vec3 vec3XAxis = { { { 1.0f, 0.0f, 0.0f } } };
 static Vec3 vec3YAxis = { { { 0.0f, 1.0f, 0.0f } } };
 static Vec3 vec3ZAxis = { { { 0.0f, 0.0f, 1.0f } } };
@@ -86,6 +94,10 @@ Vec4 vec4_(float x, float y, float z, float w) {
 
 Vec4 vec4Scale(Vec4 v, float s) {
   return MyGL_vec4Scale(v, s);
+}
+
+Mat2 mat2Inv(Mat2 M) {
+  return MyGL_mat2Inv(M);
 }
 
 Mat4 mat4I() {

@@ -1,108 +1,95 @@
 #include "collision.h"
-#include "vec.h"
 
-coll_tri_t coll_tri_make( const vec3 p0, const vec3 p1, const vec3 p2 ){
-	const float skinny = 0.9998f;	// 1 degree skinny triangle cos(1)
+CollTri makeCollTri(Vec3 p, Vec3 p2, Vec3 p3) {
+  const float skinny = 0.9998f;  // 1 degree skinny triangle cos(1)
 
-	coll_tri_t tri = {0};
-	vec3 u, v, w;
+  CollTri tri = { 0 };
+  Vec3 u, v, w;
 
-	tri.valid = false;
+  tri.valid = false;
 
-	v3copy( tri.ps[0], p0 );
-	v3copy( tri.ps[1], p1 );
-	v3copy( tri.ps[2], p2 );
+  tri.ps[0] = p;
+  tri.ps[1] = p2;
+  tri.ps[2] = p3;
+  u = vec3Make(p, p2);
+  v = vec3Make(p, p3);
+  w = vec3Make(p2, p3);
+  if (vec3Dot(u, u) < TOL_SQ || vec3Dot(v, v) < TOL_SQ || vec3Dot(w, w) < TOL_SQ) {
+    return tri;
+  }
+  u = vec3Norm(u);
+  v = vec3Norm(v);
+  w = vec3Norm(w);
+  if (fabsf(vec3Dot(u, v)) > skinny || fabsf(vec3Dot(v, w)) > skinny || fabsf(vec3Dot(w, u)) > skinny)
+    return tri;
 
-	v3make( u, p0, p1 );
-	v3make( v, p0, p2 );
-	v3make( w, p1, p2 );
-	if( v3dot( u, u ) < TOL_SQ || v3dot( v, v ) < TOL_SQ || v3dot( w, w ) < TOL_SQ ){
-		return tri;
-	}
+  tri.o = p;
+  tri.u = vec3Make(p, p2);
+  tri.v = vec3Make(p, p3);
 
-	v3norm( u );
-	v3norm( v );
-	v3norm( w );
-	if( fabsf(v3dot( u, v )) > skinny ||
-		fabsf(v3dot( v, w )) > skinny ||
-		fabsf(v3dot( w, u )) > skinny )
-		return tri;
+  Mat2 M;
+  M.e00 = vec3Dot(tri.u, tri.u);
+  M.e01 = M.e10 = vec3Dot(tri.u, tri.v);
+  M.e11 = vec3Dot(tri.v, tri.v);
 
-	v3copy( tri.o, p0 );
-	v3make( tri.u, p0, p1 );
-	v3make( tri.v, p0, p2 );
+  tri.A = mat2Inv(M);
+  tri.valid = true;
 
-	mat2x2 M;
-	M[0][0] = v3dot( tri.u, tri.u );
-	M[0][1] =
-	M[1][0] = v3dot( tri.u, tri.v );
-	M[1][1] = v3dot( tri.v, tri.v );
-
-	m2x2inv( tri.A, M );
-	tri.valid = true;
-
-	v3cross( tri.u, tri.v, tri.plane.n );
-	v3norm (tri.plane.n );
-	tri.plane.dist = v3dot( tri.o, tri.plane.n );
-	return tri;
+  tri.plane.n = vec3Norm(vec3Cross(tri.u, tri.v));
+  tri.plane.dist = vec3Dot(tri.o, tri.plane.n);
+  return tri;
 }
 
+qboolean collTriRayIsect(const CollTri *tri, const Ray *ray, Vec3 *p, float *len, float *mu, float *nu) {
+  Vec3 v, b;
 
-qboolean coll_tri_ray_isect( const coll_tri_t *tri, ray_t ray, vec3 p, float *len, float *mu, float *nu ){
-	vec3 v;
-	vec2 b;
-	float  mu_, nu_;
-	if( !tri->valid )
-		return false;
+  if (!tri->valid || !p)
+    return false;
 
-	if( !ray_plane_isect( ray, tri->plane.n, tri->plane.dist, p ) )
-			return false;
+  float dist;
+  if (!rayIsectPlane(*ray, tri->plane, p, &dist))
+    return false;
 
-	if( len ){
-		v3make( v, ray.o, p );
-		*len = v3dot( v, ray.d );
-	}
+  if (len) {
+    *len = dist;  //between 0 to ray length
+  }
 
+  v = vec3Make(tri->o, *p);
+  b.x = vec3Dot(v, tri->u);
+  b.y = vec3dot(v, tri->v);
+  b = vec2Transf(tri->A, v);
 
-	v3make( v, tri->o, p );
-	b[0] = v3dot( v, tri->u );
-	b[1] = v3dot( v, tri->v );
+  if (mu)
+    *mu = b.x;
+  if (nu)
+    *nu = b.y;
 
-	mu_ = v2dot( tri->A[0], b );
-	nu_ = v2dot( tri->A[1], b );
+  if (b.x < 0.0f || b.y < 0.0f || (b.x + b.y) > 1.0f)
+    return false;
 
-	if( mu )
-		*mu = mu_;
-	if( nu )
-		*nu = nu_;
-
-	if( mu_ < 0.0f || nu_ < 0.0f || ( mu_ + nu_ ) > 1.0f )
-		return false;
-
-	return true;
+  return true;
 }
 
+void dumpCollTrisToObj(const CollTri *tris, int num_tris, const char *name) {
 
-void coll_tris_dump_obj( const coll_tri_t *tris, int32 num_tris, const char *name ){
+  char fn[64];
+  sprintf(fn, "debug/%s.obj", name);
+  printf("dumping file '%s'\n", fn);
+  FILE *fp = fopen(fn, "w");
+  for (int32 i = 0; i < num_tris; i++) {
+    fprintf(fp, " v %f %f %f\n", tris[i].ps[0][0], tris[i].ps[0][1], tris[i].ps[0][2]);
+    fprintf(fp, " v %f %f %f\n", tris[i].ps[1][0], tris[i].ps[1][1], tris[i].ps[1][2]);
+    fprintf(fp, " v %f %f %f\n", tris[i].ps[2][0], tris[i].ps[2][1], tris[i].ps[2][2]);
+  }
 
-	char fn[64];
-	sprintf( fn, "debug/%s.obj", name );
-	printf( "dumping file '%s'\n", fn );
-	FILE *fp = fopen( fn, "w" );
-	for( int32 i = 0; i < num_tris; i++ ){
-		fprintf( fp, " v %f %f %f\n", tris[i].ps[0][0], tris[i].ps[0][1], tris[i].ps[0][2] );
-		fprintf( fp, " v %f %f %f\n", tris[i].ps[1][0], tris[i].ps[1][1], tris[i].ps[1][2] );
-		fprintf( fp, " v %f %f %f\n", tris[i].ps[2][0], tris[i].ps[2][1], tris[i].ps[2][2] );
-	}
+  for (int32 i = 0; i < num_tris; i++) {
+    int a = i * 3 + 0;
+    int b = i * 3 + 1;
+    int c = i * 3 + 2;
+    fprintf(fp, " f %d %d %d\n", a + 1, b + 1, c + 1);
+  }
 
-	for( int32 i = 0; i < num_tris; i++ ){
-		int a = i * 3 + 0;
-		int b = i * 3 + 1;
-		int c = i * 3 + 2;
-		fprintf( fp, " f %d %d %d\n", a+1, b+1, c+1 );
-	}
-
-	fclose( fp );
+  fclose(fp);
 
 }
 

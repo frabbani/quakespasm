@@ -2501,7 +2501,7 @@ void Mod_LoadAliasCollision(aliashdr_t *hdr) {
    fprintf( fp, " *  - frame %d name: %s\n", i, hdr->frames[i].name );
    */
 
-  coll_tri_t *coll_tris = (coll_tri_t*) Hunk_Alloc(hdr->numposes * hdr->numtris * sizeof(coll_tri_t));
+  CollTri *coll_tris = (CollTri*) Hunk_Alloc(hdr->numposes * hdr->numtris * sizeof(CollTri));
 
   hdr->coll_tris = (intptr_t) coll_tris - (intptr_t) hdr;
 
@@ -2519,7 +2519,7 @@ void Mod_LoadAliasCollision(aliashdr_t *hdr) {
         p1[k] = poseverts[i][v1].v[k] * hdr->scale[k] + hdr->scale_origin[k];
         p2[k] = poseverts[i][v2].v[k] * hdr->scale[k] + hdr->scale_origin[k];
       }
-      coll_tris[c++] = coll_tri_make(p0, p1, p2);
+      coll_tris[c++] = makeCollTri(p0, p1, p2);
     }
   /*
    fprintf( fp, " * # of collision tris: %d\n", c );
