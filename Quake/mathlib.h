@@ -1,25 +1,25 @@
 /*
-Copyright (C) 1996-2001 Id Software, Inc.
-Copyright (C) 2002-2009 John Fitzgibbons and others
-Copyright (C) 2007-2008 Kristian Duske
-Copyright (C) 2010-2014 QuakeSpasm developers
+ Copyright (C) 1996-2001 Id Software, Inc.
+ Copyright (C) 2002-2009 John Fitzgibbons and others
+ Copyright (C) 2007-2008 Kristian Duske
+ Copyright (C) 2010-2014 QuakeSpasm developers
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-See the GNU General Public License for more details.
+ See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-*/
+ */
 
 #ifndef __MATHLIB_H
 #define __MATHLIB_H
@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // mathlib.h
 
 #include <math.h>
+#include "mygl.h"
 
 #ifndef M_PI
 #define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
@@ -43,10 +44,13 @@ extern vec3_t vec3_origin;
 #if 0	/* macro is violating strict aliasing rules */
 #define	IS_NAN(x)	(((*(int *) (char *) &x) & nanmask) == nanmask)
 #else
-static inline int IS_NAN (float x) {
-	union { float f; int i; } num;
-	num.f = x;
-	return ((num.i & nanmask) == nanmask);
+static inline int IS_NAN(float x) {
+  union {
+    float f;
+    int i;
+  } num;
+  num.f = x;
+  return ((num.i & nanmask) == nanmask);
 }
 #endif
 
@@ -72,36 +76,34 @@ static inline int IS_NAN (float x) {
 	}\
 }
 
-void TurnVector (vec3_t out, const vec3_t forward, const vec3_t side, float angle); //johnfitz
-void VectorAngles (const vec3_t forward, vec3_t angles); //johnfitz
+void TurnVector(vec3_t out, const vec3_t forward, const vec3_t side, float angle);  //johnfitz
+void VectorAngles(const vec3_t forward, vec3_t angles);  //johnfitz
 
-void VectorMA (vec3_t veca, float scale, vec3_t vecb, vec3_t vecc);
+void VectorMA(vec3_t veca, float scale, vec3_t vecb, vec3_t vecc);
 
-vec_t _DotProduct (vec3_t v1, vec3_t v2);
-void _VectorSubtract (vec3_t veca, vec3_t vecb, vec3_t out);
-void _VectorAdd (vec3_t veca, vec3_t vecb, vec3_t out);
-void _VectorCopy (vec3_t in, vec3_t out);
+vec_t _DotProduct(vec3_t v1, vec3_t v2);
+void _VectorSubtract(vec3_t veca, vec3_t vecb, vec3_t out);
+void _VectorAdd(vec3_t veca, vec3_t vecb, vec3_t out);
+void _VectorCopy(vec3_t in, vec3_t out);
 
-int VectorCompare (vec3_t v1, vec3_t v2);
-vec_t VectorLength (vec3_t v);
-void CrossProduct (vec3_t v1, vec3_t v2, vec3_t cross);
-float VectorNormalize (vec3_t v);		// returns vector length
-void VectorInverse (vec3_t v);
-void VectorScale (vec3_t in, vec_t scale, vec3_t out);
+int VectorCompare(vec3_t v1, vec3_t v2);
+vec_t VectorLength(vec3_t v);
+void CrossProduct(vec3_t v1, vec3_t v2, vec3_t cross);
+float VectorNormalize(vec3_t v);		// returns vector length
+void VectorInverse(vec3_t v);
+void VectorScale(vec3_t in, vec_t scale, vec3_t out);
 int Q_log2(int val);
 
-void R_ConcatRotations (float in1[3][3], float in2[3][3], float out[3][3]);
-void R_ConcatTransforms (float in1[3][4], float in2[3][4], float out[3][4]);
+void R_ConcatRotations(float in1[3][3], float in2[3][3], float out[3][3]);
+void R_ConcatTransforms(float in1[3][4], float in2[3][4], float out[3][4]);
 
-void FloorDivMod (double numer, double denom, int *quotient,
-		int *rem);
+void FloorDivMod(double numer, double denom, int *quotient, int *rem);
 fixed16_t Invert24To16(fixed16_t val);
-int GreatestCommonDivisor (int i1, int i2);
+int GreatestCommonDivisor(int i1, int i2);
 
-void AngleVectors (vec3_t angles, vec3_t forward, vec3_t right, vec3_t up);
-int BoxOnPlaneSide (vec3_t emins, vec3_t emaxs, struct mplane_s *plane);
-float	anglemod(float a);
-
+void AngleVectors(vec3_t angles, vec3_t forward, vec3_t right, vec3_t up);
+int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct mplane_s *plane);
+float anglemod(float a);
 
 #define BOX_ON_PLANE_SIDE(emins, emaxs, p)	\
 	(((p)->type < 3)?						\
@@ -120,55 +122,55 @@ float	anglemod(float a);
 		BoxOnPlaneSide( (emins), (emaxs), (p)))
 
 //orthonormal basis
-typedef struct basis_s{
-	union{
-		struct{ vec3 f, r, u;	};
-		vec3 fru[3];
-	};
-}basis_t;
+typedef struct basis_s {
+  union {
+    struct {
+      vec3 f, r, u;
+    };
+    vec3 fru[3];
+  };
+} basis_t;
 
 // FXR
 
 #define TOL	(1e-7f)
 #define TOL_SQ	(TOL*TOL)
 
+typedef struct frameref_s {
+  vec3 p, p_loc;
+  basis_t basis;
+  vec3 angles;
+} frameref_t;
 
-typedef struct frameref_s{
-	vec3    p,
-	        p_loc;
-	basis_t basis;
-	vec3    angles;
-}frameref_t;
-
-frameref_t frameref_make( const vec3 p, const vec3 angles );
-void frameref_local( const frameref_t *ref, vec3 p );
-void frameref_world( const frameref_t *ref, vec3 p );
-void frameref_world_v( const frameref_t *ref, vec3 v );
+frameref_t frameref_make(const vec3 p, const vec3 angles);
+void frameref_local(const frameref_t *ref, vec3 p);
+void frameref_world(const frameref_t *ref, vec3 p);
+void frameref_world_v(const frameref_t *ref, vec3 v);
 
 //plane struct already exists in world.h
-typedef struct fplane_s{
-	vec3  n;
-	float dist;
-}fplane_t;
+typedef struct Plane_s {
+  vec3 n;
+  float dist;
+} Plane;
 
-fplane_t plane_make( const vec3 p, const vec3 n );
-fplane_t plane_world( const frameref_t *ref, fplane_t plane );
+fplane_t plane_make(const vec3 p, const vec3 n);
+fplane_t plane_world(const frameref_t *ref, fplane_t plane);
 
-typedef struct ray_s{
-	union{
-		vec3 ps[2];
-		struct{
-			vec3 o, e;	//origin/end
-		};
-	};
-	vec3  d;     //direction unit vector
-	float len;	  //v1 + len*d = v2
-}ray_t;
+typedef struct ray_s {
+  union {
+    vec3 ps[2];
+    struct {
+      vec3 o, e;	//origin/end
+    };
+  };
+  vec3 d;     //direction unit vector
+  float len;	  //v1 + len*d = v2
+} ray_t;
 
-ray_t ray_make( const vec3 p0, const vec3 p1 );
-ray_t ray_local( ray_t ray, const frameref_t *ref );
-ray_t ray_world( ray_t ray, const frameref_t *ref );
-qboolean ray_plane_isect( ray_t ray, const vec3 plane_n, float plane_dist, vec3 p );
+ray_t ray_make(const vec3 p0, const vec3 p1);
+ray_t ray_local(ray_t ray, const frameref_t *ref);
+ray_t ray_world(ray_t ray, const frameref_t *ref);
+qboolean ray_plane_isect(ray_t ray, const vec3 plane_n, float plane_dist, vec3 p);
 
 #endif	/* __MATHLIB_H */
 
