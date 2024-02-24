@@ -672,6 +672,11 @@ static void PF_traceline(void) {
     pr_global_struct->trace_ent = EDICT_TO_PROG(sv.edicts);
 }
 
+void v3copy(vec3_t to, const vec3_t from) {
+  to[0] = from[0];
+  to[1] = from[1];
+  to[2] = from[2];
+}
 //FXR
 //There is no check to if vector length > 0
 static void PF_trace_entity(void) {
@@ -701,7 +706,7 @@ static void PF_trace_entity(void) {
   if (IS_NAN(v2[0]) || IS_NAN(v2[1]) || IS_NAN(v2[2]))
     v2[0] = v2[1] = v2[2] = 0;
 
-  trace = SV_ClipMoveToEntity(ent, p.f3, vec3_origin, vec3_origin, p2.f3);
+  trace = SV_ClipMoveToEntity(ent, p1.f3, vec3_origin, vec3_origin, p2.f3);
 
   pr_global_struct->trace_allsolid = trace.allsolid;
   pr_global_struct->trace_startsolid = trace.startsolid;
@@ -726,7 +731,7 @@ static void PF_trace_entity(void) {
 
   aliashdr_t *hdr = (aliashdr_t*) Mod_Extradata(mod);
   CollTri *tris = (CollTri*) ((intptr_t) hdr + hdr->coll_tris);
-  Transform transform = makeTransform(ent->v.origin, ent->v.angles);
+  Transform transform = makeTransform(toVec3(ent->v.origin), toVec3(ent->v.angles));
 
   int32 frame = (int32) ent->v.frame;
   int32 pose = hdr->frames[frame].firstpose;
@@ -753,13 +758,13 @@ static void PF_trace_entity(void) {
   //NOT OPTIMIZED, but is easier to understand and works
   //ideally, we would pass ray by reference eliminate the repeated ray_make call,
   //but this works and thats what i really care about (perfomance is fine...)
-  ray = transformRay(&transform, ray, LocalSpace);
+  ray = transformRay(&transform, &ray, LocalSpace);
   Plane plane;
-  v3copy(p1, ray.o);
-  v3copy(p2, ray.e);
+  p1 = ray.o;
+  p2 = ray.e;
   for (int32 i = 0; i < hdr->numtris; i++) {
     tri = &tris[pose * hdr->numtris + i];
-    if (!collTriRayIsect(tri, &ray, p2, NULL, NULL, NULL))
+    if (!collTriRayIsect(tri, &ray, &p2, NULL, NULL, NULL))
       continue;
     plane = tri->plane;
     plane.n = vec3Scale(plane.n, -1.0f);
@@ -776,8 +781,8 @@ static void PF_trace_entity(void) {
   ray = transformRay(&transform, &ray, WorldSpace);
   plane = transformPlane(&transform, plane, WorldSpace);
 
-  v3copy(pr_global_struct->trace_endpos, ray.e);
-  v3copy(pr_global_struct->trace_plane_normal, plane.n);
+  v3copy(pr_global_struct->trace_endpos, ray.e.f3);
+  v3copy(pr_global_struct->trace_plane_normal, plane.n.f3);
   pr_global_struct->trace_plane_dist = plane.dist;
   pr_global_struct->trace_ent = EDICT_TO_PROG(ent);
   pr_global_struct->trace_fraction = ray.len / len;

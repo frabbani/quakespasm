@@ -27,6 +27,7 @@
 // mathlib.h
 
 #include <math.h>
+#include "q_stdinc.h"
 #include "mygl.h"
 
 #ifndef M_PI
@@ -132,6 +133,7 @@ typedef struct Basis_s {
 } Basis;
 
 // FXR
+Vec3 toVec3(vec3_t v);
 
 #define TOL	(1e-7f)
 #define TOL_SQ	(1e-14f)
@@ -155,7 +157,7 @@ typedef struct Ray_s {
 } Ray;
 
 Ray makeRay(Vec3 p, Vec3 p2);
-qboolean rayIsectPlane(const Ray *ray, Plane plane, vec3 *p, float *dist);
+qboolean rayIsectPlane(const Ray *ray, Plane plane, Vec3 *p, float *dist);
 
 typedef struct Transform_s {
   Vec3 p, p_loc;

@@ -46,7 +46,7 @@ extern Vec4 vec4_(float x, float y, float z, float w);
 
 extern Vec4 vec4Scale(Vec4 v, float s);
 
-extern Mat2 mat2Inv(Mat4 M);
+extern Mat2 mat2Inv(Mat2 M);
 
 extern Mat4 mat4I();
 extern Mat4 mat4Mul(Mat4 lhs, Mat4 rhs);

@@ -39,19 +39,19 @@
 #include <stdio.h>
 
 /* NOTES on TYPE SIZES:
-   Quake/Hexen II engine relied on 32 bit int type size
-   with ILP32 (not LP32) model in mind.  We now support
-   LP64 and LLP64, too. We expect:
-   sizeof (char)	== 1
-   sizeof (short)	== 2
-   sizeof (int)		== 4
-   sizeof (float)	== 4
-   sizeof (long)	== 4 / 8
-   sizeof (pointer *)	== 4 / 8
-   For this, we need stdint.h (or inttypes.h)
-   FIXME: On some platforms, only inttypes.h is available.
-   FIXME: Properly replace certain short and int usage
-	  with int16_t and int32_t.
+ Quake/Hexen II engine relied on 32 bit int type size
+ with ILP32 (not LP32) model in mind.  We now support
+ LP64 and LLP64, too. We expect:
+ sizeof (char)	== 1
+ sizeof (short)	== 2
+ sizeof (int)		== 4
+ sizeof (float)	== 4
+ sizeof (long)	== 4 / 8
+ sizeof (pointer *)	== 4 / 8
+ For this, we need stdint.h (or inttypes.h)
+ FIXME: On some platforms, only inttypes.h is available.
+ FIXME: Properly replace certain short and int usage
+ with int16_t and int32_t.
  */
 #if defined(_MSC_VER) && (_MSC_VER < 1600)
 /* MS Visual Studio provides stdint.h only starting with
@@ -106,10 +106,9 @@ COMPILE_TIME_ASSERT(short, sizeof(short) == 2);
 
 /* make sure enums are the size of ints for structure packing */
 typedef enum {
-	THE_DUMMY_VALUE
+  THE_DUMMY_VALUE
 } THE_DUMMY_ENUM;
 COMPILE_TIME_ASSERT(enum, sizeof(THE_DUMMY_ENUM) == sizeof(int));
-
 
 /* Provide a substitute for offsetof() if we don't have one.
  * This variant works on most (but not *all*) systems...
@@ -118,22 +117,20 @@ COMPILE_TIME_ASSERT(enum, sizeof(THE_DUMMY_ENUM) == sizeof(int));
 #define offsetof(t,m) ((intptr_t)&(((t *)0)->m))
 #endif
 
-
 /*==========================================================================*/
 
-typedef unsigned char		byte;
+typedef unsigned char byte;
 
 // FXR
-typedef int8_t  int8;
+typedef int8_t int8;
 typedef int16_t int16;
 typedef int32_t int32;
 typedef int64_t int64;
 
-typedef uint8_t  uint8;
+typedef uint8_t uint8;
 typedef uint16_t uint16;
 typedef uint32_t uint32;
 typedef uint64_t uint64;
-
 
 #undef true
 #undef false
@@ -141,9 +138,9 @@ typedef uint64_t uint64;
 /* some structures have qboolean members and the x86 asm code expect
  * those members to be 4 bytes long. therefore, qboolean must be 32
  * bits and it can NOT be binary compatible with the 8 bit C++ bool.  */
-typedef int	qboolean;
+typedef int qboolean;
 COMPILE_TIME_ASSERT(falsehood, (0 == false));
-COMPILE_TIME_ASSERT(truth, (1  == true));
+COMPILE_TIME_ASSERT(truth, (1 == true));
 #else
 typedef enum {
 	false = 0,
@@ -157,27 +154,14 @@ COMPILE_TIME_ASSERT(qboolean, sizeof(qboolean) == 4);
 /*==========================================================================*/
 
 /* math */
-typedef float	vec_t;
-typedef vec_t	vec2_t[2];
-typedef vec_t	vec3_t[3];
-typedef vec_t	vec4_t[4];
-typedef vec_t	vec5_t[5];
-typedef int	fixed4_t;
-typedef int	fixed8_t;
-typedef int	fixed16_t;
-
-//FXR
-typedef vec2_t vec2;
-typedef vec3_t vec3;
-typedef vec4_t vec4;
-
-typedef float mat2x2[2][2];
-typedef float mat3x3[3][3];
-typedef float mat4x4[4][4];
-
-#define CONSTM2X2(m2x2) ( (const vec2*)(const void*)m2x2 )
-#define CONSTM3X3(m3x3) ( (const vec3*)(const void*)m3x3 )
-#define CONSTM4X4(m4x4) ( (const vec4*)(const void*)m4x4 )
+typedef float vec_t;
+typedef vec_t vec2_t[2];
+typedef vec_t vec3_t[3];
+typedef vec_t vec4_t[4];
+typedef vec_t vec5_t[5];
+typedef int fixed4_t;
+typedef int fixed8_t;
+typedef int fixed16_t;
 
 /* misc */
 #define SWAP( a, b )	{ \
@@ -272,7 +256,6 @@ typedef ptrdiff_t	ssize_t;
 #endif	/* _MSC_VER */
 
 /*==========================================================================*/
-
 
 #endif	/* __QSTDINC_H */
 

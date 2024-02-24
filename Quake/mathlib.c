@@ -431,6 +431,9 @@ fixed16_t Invert24To16(fixed16_t val) {
 }
 
 // FXR
+Vec3 toVec3(vec3_t v) {
+  return vec3_(v[0], v[1], v[2]);
+}
 
 Plane makePlane(Vec3 p, Vec3 n) {
   Plane plane;
@@ -455,7 +458,7 @@ Ray makeRay(Vec3 p, Vec3 p2) {
   return ray;
 }
 
-qboolean rayIsectPlane(const Ray *ray, Plane plane, vec3 *p, float *dist) {
+qboolean rayIsectPlane(const Ray *ray, Plane plane, Vec3 *p, float *dist) {
   const float grazing = 0.01745f;  //~1 degs grazing angle (sin(~1))
   if (ray->len < TOL)
     return false;
@@ -493,9 +496,9 @@ Transform makeTransform(Vec3 p, Vec3 angles) {
   AngleVectors(t.angles.f3, t.basis.f.f3, t.basis.r.f3, t.basis.u.f3);
   vec3Scale(t.basis.r, -1.0f);  //-y is right, +y is left
 
-  t.p_loc[0] = vec3Dot(t.p, t.basis.fru[0]);
-  t.p_loc[1] = vec3Dot(t.p, t.basis.fru[1]);
-  t.p_loc[2] = vec3Dot(t.p, t.basis.fru[2]);
+  t.p_loc.x = vec3Dot(t.p, t.basis.fru[0]);
+  t.p_loc.y = vec3Dot(t.p, t.basis.fru[1]);
+  t.p_loc.z = vec3Dot(t.p, t.basis.fru[2]);
   return t;
 }
 
@@ -509,7 +512,7 @@ Vec3 transformVec(const Transform *transform, Vec3 p, TransformSpace space, qboo
   } else {
     Vec3 fru[3];
     for (int i = 0; i < 3; i++) {
-      fru[i] = vec3Scale(transform->basis.fru[i], p[i]);
+      fru[i] = vec3Scale(transform->basis.fru[i], p.f3[i]);
     }
     p = vec3Add(fru[0], vec3Add(fru[1], fru[2]));
     if (!direction_only)

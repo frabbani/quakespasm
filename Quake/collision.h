@@ -10,10 +10,10 @@ typedef struct CollTri_s {
   Plane plane;
 } CollTri;
 
-CollTri makeCollTri(Vec3 p, Vec3 p2, Vec3 p3);
+CollTri makeCollTri(Vec3 p1, Vec3 p2, Vec3 p3);
 
 void dumpCollTrisToObj(const CollTri *tris, int num_tris, const char *name);
 
 //p = tri.o + mu * tri.u + nu * tri.v
-qboolean qboolean collTriRayIsect(const CollTri *tri, const Ray *ray, Vec3 *p, float *len, float *mu, float *nu);
+qboolean collTriRayIsect(const CollTri *tri, const Ray *ray, Vec3 *p, float *len, float *mu, float *nu);
 
