@@ -123,12 +123,12 @@ float anglemod(float a);
 		BoxOnPlaneSide( (emins), (emaxs), (p)))
 
 //orthonormal basis
-typedef struct Basis_s {
+typedef struct basis_s {
   union {
     struct {
-      Vec3 f, r, u;
+      Vec3 l, r, u;
     };
-    Vec3 fru[3];
+    Vec3 lru[3];
   };
 } Basis;
 
@@ -138,14 +138,14 @@ Vec3 toVec3(vec3_t v);
 #define TOL	(1e-7f)
 #define TOL_SQ	(1e-14f)
 
-typedef struct Plane_s {
+typedef struct plane_s {
   Vec3 n;
   float dist;
 } Plane;
 
-Plane makePlane(Vec3 p, Vec3 n);
+Plane make_plane(Vec3 p, Vec3 n);
 
-typedef struct Ray_s {
+typedef struct ray_s {
   union {
     Vec3 ps[2];
     struct {
@@ -156,24 +156,24 @@ typedef struct Ray_s {
   float len;    //v1 + len*d = v2
 } Ray;
 
-Ray makeRay(Vec3 p, Vec3 p2);
-qboolean rayIsectPlane(const Ray *ray, Plane plane, Vec3 *p, float *dist);
+Ray make_ray(Vec3 p, Vec3 p2);
+qboolean ray_isect_plane(const Ray *ray, Plane plane, Vec3 *p, float *dist);
 
-typedef struct Transform_s {
+typedef struct transform_s {
   Vec3 p, p_loc;
   Vec3 angles;
   Basis basis;
 } Transform;
 
-typedef enum TransformSpace_e {
+typedef enum transform_space_e {
   LocalSpace,
   WorldSpace,
 } TransformSpace;
 
-Transform makeTransform(Vec3 p, Vec3 angles);
-Vec3 transformVec(const Transform *transform, Vec3 p, TransformSpace space, qboolean direction_only);
-Plane transformPlane(const Transform *transform, Plane plane, TransformSpace space);
-Ray transformRay(const Transform *transform, const Ray *ray, TransformSpace space);
+Transform make_transform(Vec3 p, Vec3 angles);
+Vec3 transform_vec3(const Transform *transform, Vec3 p, TransformSpace space, qboolean direction_only);
+Plane transform_plane(const Transform *transform, Plane plane, TransformSpace space);
+Ray transform_ray(const Transform *transform, const Ray *ray, TransformSpace space);
 
 #endif	/* __MATHLIB_H */
 

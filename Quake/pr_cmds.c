@@ -731,7 +731,7 @@ static void PF_trace_entity(void) {
 
   aliashdr_t *hdr = (aliashdr_t*) Mod_Extradata(mod);
   CollTri *tris = (CollTri*) ((intptr_t) hdr + hdr->coll_tris);
-  Transform transform = makeTransform(toVec3(ent->v.origin), toVec3(ent->v.angles));
+  Transform transform = make_transform(toVec3(ent->v.origin), toVec3(ent->v.angles));
 
   int32 frame = (int32) ent->v.frame;
   int32 pose = hdr->frames[frame].firstpose;
@@ -744,11 +744,11 @@ static void PF_trace_entity(void) {
 
   qboolean collision = 0;
   CollTri *tri = NULL;
-  Ray ray = makeRay(p1, p2);
+  Ray ray = make_ray(p1, p2);
   len = ray.len;
 
   //NOT OPTIMIZED!
-  ray = transformRay(&transform, &ray, LocalSpace);
+  ray = transform_ray(&transform, &ray, LocalSpace);
 
 //  static qboolean first = true;
 //  if (first) {
@@ -762,7 +762,7 @@ static void PF_trace_entity(void) {
   for (int i = 0; i < hdr->numtris; i++) {
     tri = &tris[pose * hdr->numtris + i];
     float coll_len;
-    if (!collTriRayIsect(tri, &ray, &p2, &coll_len, NULL, NULL))
+    if (!colltri_ray_isect(tri, &ray, &p2, &coll_len, NULL, NULL))
       continue;
     plane = tri->plane;
     ray.e = p2;
@@ -774,11 +774,11 @@ static void PF_trace_entity(void) {
     pr_global_struct->trace_fraction = 1.0f;
     return;
   }
-  plane.n = vec3Scale(plane.n, -1.0f);
+  plane.n = v3scale(plane.n, -1.0f);
   plane.dist *= -1.0f;
 
-  ray = transformRay(&transform, &ray, WorldSpace);
-  plane = transformPlane(&transform, plane, WorldSpace);
+  ray = transform_ray(&transform, &ray, WorldSpace);
+  plane = transform_plane(&transform, plane, WorldSpace);
 
   v3copy(pr_global_struct->trace_endpos, ray.e.f3);
   v3copy(pr_global_struct->trace_plane_normal, plane.n.f3);

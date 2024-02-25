@@ -1,6 +1,6 @@
 #include "collision.h"
 
-CollTri makeCollTri(Vec3 p1, Vec3 p2, Vec3 p3) {
+CollTri make_colltri(Vec3 p1, Vec3 p2, Vec3 p3) {
   const float skinny = 0.9998f;  // 1 degree skinny triangle cos(1)
 
   CollTri tri = { 0 };
@@ -11,41 +11,41 @@ CollTri makeCollTri(Vec3 p1, Vec3 p2, Vec3 p3) {
   tri.ps[0] = p1;
   tri.ps[1] = p2;
   tri.ps[2] = p3;
-  u = vec3Make(p1, p2);
-  v = vec3Make(p1, p3);
-  w = vec3Make(p2, p3);
-  if (vec3Dot(u, u) < TOL_SQ || vec3Dot(v, v) < TOL_SQ || vec3Dot(w, w) < TOL_SQ) {
+  u = v3make(p1, p2);
+  v = v3make(p1, p3);
+  w = v3make(p2, p3);
+  if (v3dot(u, u) < TOL_SQ || v3dot(v, v) < TOL_SQ || v3dot(w, w) < TOL_SQ) {
     return tri;
   }
-  u = vec3Norm(u);
-  v = vec3Norm(v);
-  w = vec3Norm(w);
-  if (fabsf(vec3Dot(u, v)) > skinny || fabsf(vec3Dot(v, w)) > skinny || fabsf(vec3Dot(w, u)) > skinny)
+  u = v3norm(u);
+  v = v3norm(v);
+  w = v3norm(w);
+  if (fabsf(v3dot(u, v)) > skinny || fabsf(v3dot(v, w)) > skinny || fabsf(v3dot(w, u)) > skinny)
     return tri;
 
   tri.o = p1;
-  tri.u = vec3Make(p1, p2);
-  tri.v = vec3Make(p1, p3);
+  tri.u = v3make(p1, p2);
+  tri.v = v3make(p1, p3);
 
   Mat2 M;
-  M.e00 = vec3Dot(tri.u, tri.u);
-  M.e01 = M.e10 = vec3Dot(tri.u, tri.v);
-  M.e11 = vec3Dot(tri.v, tri.v);
+  M.e00 = v3dot(tri.u, tri.u);
+  M.e01 = M.e10 = v3dot(tri.u, tri.v);
+  M.e11 = v3dot(tri.v, tri.v);
 
-  tri.A = mat2Inv(M);
+  tri.A = m2inv(M);
   tri.valid = true;
 
-  tri.plane.n = vec3Norm(vec3Cross(tri.u, tri.v));
-  tri.plane.dist = vec3Dot(tri.o, tri.plane.n);
+  tri.plane.n = v3norm(v3cross(tri.u, tri.v));
+  tri.plane.dist = v3dot(tri.o, tri.plane.n);
   return tri;
 }
 
-qboolean collTriRayIsect(const CollTri *tri, const Ray *ray, Vec3 *p, float *len, float *mu, float *nu) {
-  if (!tri->valid || !p)
+qboolean colltri_ray_isect(const CollTri *tri, const Ray *ray, Vec3 *p, float *len, float *mu, float *nu) {
+  if (!tri->valid || !ray || !p)
     return false;
 
   float dist;
-  if (!rayIsectPlane(ray, tri->plane, p, &dist))
+  if (!ray_isect_plane(ray, tri->plane, p, &dist))
     return false;
 
   if (len) {
@@ -53,10 +53,10 @@ qboolean collTriRayIsect(const CollTri *tri, const Ray *ray, Vec3 *p, float *len
   }
 
   Vec2 b;
-  Vec3 v = vec3Make(tri->o, *p);
-  b.x = vec3Dot(v, tri->u);
-  b.y = vec3Dot(v, tri->v);
-  b = vec2Transf(tri->A, b);
+  Vec3 v = v3make(tri->o, *p);
+  b.x = v3dot(v, tri->u);
+  b.y = v3dot(v, tri->v);
+  b = v2transf(tri->A, b);
 
   if (mu)
     *mu = b.x;
@@ -69,7 +69,7 @@ qboolean collTriRayIsect(const CollTri *tri, const Ray *ray, Vec3 *p, float *len
   return true;
 }
 
-void dumpCollTrisToObj(const CollTri *tris, int num_tris, const char *name) {
+void dump_colltri_to_obj(const CollTri *tris, int num_tris, const char *name) {
 
   char fn[64];
   sprintf(fn, "debug/%s.obj", name);
@@ -92,7 +92,7 @@ void dumpCollTrisToObj(const CollTri *tris, int num_tris, const char *name) {
 
 }
 
-void dumpCollTrisAndRayToObj(const CollTri *tris, int num_tris, Ray ray, const char *name) {
+void dump_colltri_ray_to_obj(const CollTri *tris, int num_tris, Ray ray, const char *name) {
 
   char fn[64];
   sprintf(fn, "debug/%s.obj", name);

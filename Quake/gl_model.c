@@ -2519,7 +2519,7 @@ void Mod_LoadAliasCollision(aliashdr_t *hdr) {
         p1.f3[k] = poseverts[i][v1].v[k] * hdr->scale[k] + hdr->scale_origin[k];
         p2.f3[k] = poseverts[i][v2].v[k] * hdr->scale[k] + hdr->scale_origin[k];
       }
-      coll_tris[c++] = makeCollTri(p0, p1, p2);
+      coll_tris[c++] = make_colltri(p0, p1, p2);
     }
   /*
    fprintf( fp, " * # of collision tris: %d\n", c );

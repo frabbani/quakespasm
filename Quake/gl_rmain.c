@@ -436,7 +436,7 @@ void R_SetupGL(void) {
   //GL_SetFrustum(r_fovx, r_fovy);  //johnfitz -- use r_fov* vars
 
   float aspect = (float) glwidth / (float) glheight;
-  Mat4 P = mat4Persp(aspect, r_fovx * M_PI_DIV_180, 0.1f, 3000.0f);
+  Mat4 P = m4persp(aspect, r_fovx * M_PI_DIV_180, 0.1f, 3000.0f);
   glLoadTransposeMatrixf(P.f16);
 
   //glCullFace(GL_BACK);   //johnfitz -- glquake used CCW with backwards culling -- let's do it right
@@ -444,18 +444,18 @@ void R_SetupGL(void) {
   glMatrixMode( GL_MODELVIEW);
 
   Vec3 p, r, l, u;
-  p = vec3_(r_refdef.vieworg[0], r_refdef.vieworg[1], r_refdef.vieworg[2]);
-  l = vec3L();
-  u = vec3U();
-  r = vec3R();
+  p = v3_(r_refdef.vieworg[0], r_refdef.vieworg[1], r_refdef.vieworg[2]);
+  l = v3x();
+  u = v3z();
+  r = v3cross(l, u);
 
-  l = vec3Rot(l, u, r_refdef.viewangles[YAW] * M_PI_DIV_180);
-  r = vec3Rot(r, u, r_refdef.viewangles[YAW] * M_PI_DIV_180);
+  l = v3rot(l, u, r_refdef.viewangles[YAW] * M_PI_DIV_180);
+  r = v3rot(r, u, r_refdef.viewangles[YAW] * M_PI_DIV_180);
 
-  l = vec3Rot(l, r, -(r_refdef.viewangles[PITCH] + 0.0f) * M_PI_DIV_180);
-  u = vec3Rot(u, r, -(r_refdef.viewangles[PITCH] + 0.0f) * M_PI_DIV_180);
+  l = v3rot(l, r, -(r_refdef.viewangles[PITCH] + 0.0f) * M_PI_DIV_180);
+  u = v3rot(u, r, -(r_refdef.viewangles[PITCH] + 0.0f) * M_PI_DIV_180);
 
-  Mat4 V = mat4View(p, r, l, u);
+  Mat4 V = m4view(p, r, l, u);
   // glLoadIdentity();
   // glRotatef(90, 1, 0, 0);	    // put Z going up
   // glRotatef(90, 0, 0, 1);	    // put Z going up

@@ -10,11 +10,11 @@ MyGL *mygl = NULL;
 
 MYGLSTRNFUNCS(64);
 
-Vec2 vec2_(float x, float y) {
+Vec2 v2_(float x, float y) {
   return MyGL_vec2(x, y);
 }
 
-Vec2 vec2Transf(Mat2 M, Vec2 v) {
+Vec2 v2transf(Mat2 M, Vec2 v) {
   return MyGL_vec2Transf(M, v);
 }
 
@@ -26,21 +26,21 @@ static Vec3 vec3RAxis = { { { 0.0f, -1.0f, 0.0f } } };
 static Vec3 vec3FAxis = { { { 1.0f, 0.0f, 0.0f } } };
 static Vec3 vec3UAxis = { { { 0.0f, 0.0f, 1.0f } } };
 
-Vec3 vec3_(float x, float y, float z) {
+Vec3 v3_(float x, float y, float z) {
   return MyGL_vec3(x, y, z);
 }
 
-Vec3 vec3Zero() {
+Vec3 v3zero() {
   return MyGL_vec3Zero;
 }
 
-Vec3 vec3X() {
+Vec3 v3x() {
   return vec3XAxis;
 }
-Vec3 vec3Y() {
+Vec3 v3y() {
   return vec3YAxis;
 }
-Vec3 vec3Z() {
+Vec3 v3z() {
   return vec3ZAxis;
 }
 
@@ -56,70 +56,70 @@ Vec3 vec3U() {
   return vec3UAxis;
 }
 
-Vec3 vec3Add(Vec3 lhs, Vec3 rhs) {
+Vec3 v3add(Vec3 lhs, Vec3 rhs) {
   return MyGL_vec3Add(lhs, rhs);
 }
 
-Vec3 vec3Sub(Vec3 lhs, Vec3 rhs) {
+Vec3 v3sub(Vec3 lhs, Vec3 rhs) {
   return MyGL_vec3Sub(lhs, rhs);
 }
 
-Vec3 vec3Scale(Vec3 v, float s) {
+Vec3 v3scale(Vec3 v, float s) {
   return MyGL_vec3Scale(v, s);
 }
 
-float vec3Dot(Vec3 lhs, Vec3 rhs) {
+float v3dot(Vec3 lhs, Vec3 rhs) {
   return MyGL_vec3Dot(lhs, rhs);
 }
 
-float vec3Mag(Vec3 v) {
+float v3mag(Vec3 v) {
   return MyGL_vec3Mag(v);
 }
 
-Vec3 vec3Norm(Vec3 v) {
+Vec3 v3norm(Vec3 v) {
   return MyGL_vec3Norm(v);
 }
 
-Vec3 vec3Cross(Vec3 lhs, Vec3 rhs) {
+Vec3 v3cross(Vec3 lhs, Vec3 rhs) {
   return MyGL_vec3Cross(lhs, rhs);
 }
 
-Vec3 vec3Rot(Vec3 p, Vec3 axis, float radians) {
+Vec3 v3rot(Vec3 p, Vec3 axis, float radians) {
   return MyGL_vec3Rotate(p, axis, radians);
 }
 
-Vec4 vec4_(float x, float y, float z, float w) {
+Vec4 v4_(float x, float y, float z, float w) {
   return MyGL_vec4(x, y, z, w);
 }
 
-Vec4 vec4Scale(Vec4 v, float s) {
+Vec4 v4scale(Vec4 v, float s) {
   return MyGL_vec4Scale(v, s);
 }
 
-Mat2 mat2Inv(Mat2 M) {
+Mat2 m2inv(Mat2 M) {
   return MyGL_mat2Inv(M);
 }
 
-Mat4 mat4I() {
+Mat4 m4ident() {
   return MyGL_mat4Identity;
 }
 
-Mat4 mat4Mul(Mat4 lhs, Mat4 rhs) {
+Mat4 m4mul(Mat4 lhs, Mat4 rhs) {
   return MyGL_mat4Multiply(lhs, rhs);
 }
 
-Mat4 mat4Persp(float aspect, float fovInRadians, float min, float max) {
-  return MyGL_mat4Perspective(aspect, fovInRadians, min, max);
+Mat4 m4persp(float aspect, float fov_radians, float min, float max) {
+  return MyGL_mat4Perspective(aspect, fov_radians, min, max);
 }
-Mat4 mat4Ortho(uint32_t w, uint32_t h, float min, float max) {
+Mat4 m4ortho(uint32_t w, uint32_t h, float min, float max) {
   return MyGL_mat4Ortho(w, h, min, max);
 }
 
-Mat4 mat4World(Vec3 p, Vec3 r, Vec3 l, Vec3 u) {
+Mat4 m4world(Vec3 p, Vec3 r, Vec3 l, Vec3 u) {
   return MyGL_mat4World(p, r, l, u);
 }
 
-Mat4 mat4View(Vec3 p, Vec3 r, Vec3 l, Vec3 u) {
+Mat4 m4view(Vec3 p, Vec3 r, Vec3 l, Vec3 u) {
   return MyGL_mat4View(p, r, l, u);
 }
 

@@ -603,15 +603,15 @@ void R_DrawAliasModel(entity_t *e) {
   glPushMatrix();
 
   Vec3 p, r, l, u;
-  p = vec3_(lerpdata.origin[0], lerpdata.origin[1], lerpdata.origin[2]);
+  p = v3_(lerpdata.origin[0], lerpdata.origin[1], lerpdata.origin[2]);
 
-  l = vec3Rot(vec3Y(), vec3Z(), lerpdata.angles[YAW] * M_PI_DIV_180);
-  r = vec3Rot(vec3X(), vec3Z(), lerpdata.angles[YAW] * M_PI_DIV_180);
-  l = vec3Rot(l, r, -lerpdata.angles[PITCH] * M_PI_DIV_180);
-  u = vec3Rot(vec3Z(), r, -lerpdata.angles[PITCH] * M_PI_DIV_180);
+  l = v3rot(v3y(), v3z(), lerpdata.angles[YAW] * M_PI_DIV_180);
+  r = v3rot(v3x(), v3z(), lerpdata.angles[YAW] * M_PI_DIV_180);
+  l = v3rot(l, r, -lerpdata.angles[PITCH] * M_PI_DIV_180);
+  u = v3rot(v3z(), r, -lerpdata.angles[PITCH] * M_PI_DIV_180);
 
-  Mat4 W = mat4World(p, r, l, u);
-  Mat4 T = mat4I();
+  Mat4 W = m4world(p, r, l, u);
+  Mat4 T = m4ident();
 
   // decode MDL vertices
   T.e00 = paliashdr->scale[0];
@@ -621,7 +621,7 @@ void R_DrawAliasModel(entity_t *e) {
   T.e13 = paliashdr->scale_origin[1] * fovscale;
   T.e23 = paliashdr->scale_origin[2] * fovscale;
 
-  glMultTransposeMatrixf(mat4Mul(W, T).f16);
+  glMultTransposeMatrixf(m4mul(W, T).f16);
 
   //R_RotateForEntity(lerpdata.origin, lerpdata.angles);
   //glTranslatef(paliashdr->scale_origin[0], paliashdr->scale_origin[1] * fovscale, paliashdr->scale_origin[2] * fovscale);
