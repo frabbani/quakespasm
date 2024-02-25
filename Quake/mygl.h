@@ -55,5 +55,5 @@ extern Mat4 m4world(Vec3 p, Vec3 r, Vec3 l, Vec3 u);
 
 typedef MyGL_Str64 Str64;
 #define str64 MyGL_str64
-#define str64Cat MyGL_str64Cat
-#define str64Fmt MyGL_str64Fmt
+#define str64cat MyGL_str64Cat
+#define str64fmt MyGL_str64Fmt
