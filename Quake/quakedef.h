@@ -1,25 +1,25 @@
 /*
-Copyright (C) 1996-2001 Id Software, Inc.
-Copyright (C) 2002-2009 John Fitzgibbons and others
-Copyright (C) 2007-2008 Kristian Duske
-Copyright (C) 2010-2019 QuakeSpasm developers
+ Copyright (C) 1996-2001 Id Software, Inc.
+ Copyright (C) 2002-2009 John Fitzgibbons and others
+ Copyright (C) 2007-2008 Kristian Duske
+ Copyright (C) 2010-2019 QuakeSpasm developers
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-See the GNU General Public License for more details.
+ See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-*/
+ */
 
 #ifndef QUAKEDEFS_H
 #define QUAKEDEFS_H
@@ -73,7 +73,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // fall over
 #define	ROLL		2
 
-
 #define	MAX_QPATH	64		// max length of a quake game pathname
 
 #define	ON_EPSILON	0.1		// point on plane side epsilon
@@ -90,7 +89,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
 #define	MIN_EDICTS	256		// johnfitz -- lowest allowed value for max_edicts cvar
 #define	MAX_EDICTS	32000		// johnfitz -- highest allowed value for max_edicts cvar
-						// ents past 8192 can't play sounds in the standard protocol
+// ents past 8192 can't play sounds in the standard protocol
 #define	MAX_LIGHTSTYLES	64
 #define	MAX_MODELS	2048		// johnfitz -- was 256
 #define	MAX_SOUNDS	2048		// johnfitz -- was 256
@@ -191,19 +190,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define	SOUND_CHANNELS		8
 
-typedef struct
-{
-	const char *basedir;
-	const char *userdir;	// user's directory on UNIX platforms.
-				// if user directories are enabled, basedir
-				// and userdir will point to different
-				// memory locations, otherwise to the same.
-	int	argc;
-	char	**argv;
-	void	*membase;
-	int	memsize;
-	int	numcpus;
-	int	errstate;
+typedef struct {
+  const char *basedir;
+  const char *userdir;	// user's directory on UNIX platforms.
+  // if user directories are enabled, basedir
+  // and userdir will point to different
+  // memory locations, otherwise to the same.
+  int argc;
+  char **argv;
+  void *membase;
+  int memsize;
+  int numcpus;
+  int errstate;
 } quakeparms_t;
 
 #include "common.h"
@@ -223,18 +221,15 @@ typedef struct
 #include "server.h"
 
 #include "platform.h"
-#if defined(SDL_FRAMEWORK) || defined(NO_SDL_CONFIG)
-#if defined(USE_SDL2)
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-#else
-#include <SDL/SDL.h>
-#include <SDL/SDL_opengl.h>
+
+#ifndef USE_SDL2
+#define USE_SDL2 1
 #endif
-#else
-#include "SDL.h"
-#include "SDL_opengl.h"
-#endif
+
+#include <mygl.h>
+#include <SDL.h>
+#include <SDL_opengl.h>
+
 #ifndef APIENTRY
 #define	APIENTRY
 #endif
@@ -260,7 +255,7 @@ typedef struct
 #include "menu.h"
 #include "cdaudio.h"
 #include "glquake.h"
-
+#include "mygl.h"
 
 //=============================================================================
 
@@ -273,63 +268,62 @@ extern qboolean noclip_anglehack;
 //
 // host
 //
-extern	quakeparms_t *host_parms;
+extern quakeparms_t *host_parms;
 
-extern	cvar_t		sys_ticrate;
-extern	cvar_t		sys_throttle;
-extern	cvar_t		sys_nostdout;
-extern	cvar_t		developer;
-extern	cvar_t		max_edicts; //johnfitz
+extern cvar_t sys_ticrate;
+extern cvar_t sys_throttle;
+extern cvar_t sys_nostdout;
+extern cvar_t developer;
+extern cvar_t max_edicts;  //johnfitz
 
-extern	qboolean	host_initialized;	// true if into command execution
-extern	double		host_frametime;
-extern	byte		*host_colormap;
-extern	int		host_framecount;	// incremented every frame, never reset
-extern	double		realtime;		// not bounded in any way, changed at
-							// start of every frame, never reset
+extern qboolean host_initialized;  // true if into command execution
+extern double host_frametime;
+extern byte *host_colormap;
+extern int host_framecount;  // incremented every frame, never reset
+extern double realtime;		// not bounded in any way, changed at
+// start of every frame, never reset
 
-typedef struct filelist_item_s
-{
-	char			name[32];
-	struct filelist_item_s	*next;
+typedef struct filelist_item_s {
+  char name[32];
+  struct filelist_item_s *next;
 } filelist_item_t;
 
-extern filelist_item_t	*modlist;
-extern filelist_item_t	*extralevels;
-extern filelist_item_t	*demolist;
+extern filelist_item_t *modlist;
+extern filelist_item_t *extralevels;
+extern filelist_item_t *demolist;
 
-void Host_ClearMemory (void);
-void Host_ServerFrame (void);
-void Host_InitCommands (void);
-void Host_Init (void);
+void Host_ClearMemory(void);
+void Host_ServerFrame(void);
+void Host_InitCommands(void);
+void Host_Init(void);
 void Host_Shutdown(void);
-void Host_Callback_Notify (cvar_t *var);	/* callback function for CVAR_NOTIFY */
-FUNC_NORETURN void Host_Error (const char *error, ...) FUNC_PRINTF(1,2);
-FUNC_NORETURN void Host_EndGame (const char *message, ...) FUNC_PRINTF(1,2);
+void Host_Callback_Notify(cvar_t *var); /* callback function for CVAR_NOTIFY */
+FUNC_NORETURN void Host_Error(const char *error, ...) FUNC_PRINTF(1,2);
+FUNC_NORETURN void Host_EndGame(const char *message, ...) FUNC_PRINTF(1,2);
 #ifdef __WATCOMC__
 #pragma aux Host_Error aborts;
 #pragma aux Host_EndGame aborts;
 #endif
-void Host_Frame (float time);
-void Host_Quit_f (void);
-void Host_ClientCommands (const char *fmt, ...) FUNC_PRINTF(1,2);
-void Host_ShutdownServer (qboolean crash);
-void Host_WriteConfiguration (void);
+void Host_Frame(float time);
+void Host_Quit_f(void);
+void Host_ClientCommands(const char *fmt, ...) FUNC_PRINTF(1,2);
+void Host_ShutdownServer(qboolean crash);
+void Host_WriteConfiguration(void);
 
-void ExtraMaps_Init (void);
-void Modlist_Init (void);
-void DemoList_Init (void);
+void ExtraMaps_Init(void);
+void Modlist_Init(void);
+void DemoList_Init(void);
 
-void ExtraMaps_NewGame (void);
-void DemoList_Rebuild (void);
+void ExtraMaps_NewGame(void);
+void DemoList_Rebuild(void);
 
-extern int		current_skill;	// skill level for currently loaded level (in case
-					//  the user changes the cvar while the level is
-					//  running, this reflects the level actually in use)
+extern int current_skill;  // skill level for currently loaded level (in case
+//  the user changes the cvar while the level is
+//  running, this reflects the level actually in use)
 
-extern qboolean		isDedicated;
+extern qboolean isDedicated;
 
-extern int		minimum_memory;
+extern int minimum_memory;
 
 #endif	/* QUAKEDEFS_H */
 
