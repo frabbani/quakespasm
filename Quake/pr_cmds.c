@@ -730,7 +730,7 @@ static void PF_trace_entity(void) {
   }
 
   aliashdr_t *hdr = (aliashdr_t*) Mod_Extradata(mod);
-  CollTri *tris = (CollTri*) ((intptr_t) hdr + hdr->coll_tris);
+  CollTri *tris = (CollTri*) ((intptr_t) hdr + hdr->colltris);
   Transform transform = make_transform(toVec3(ent->v.origin), toVec3(ent->v.angles));
 
   int32 frame = (int32) ent->v.frame;

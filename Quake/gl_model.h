@@ -335,7 +335,7 @@ typedef struct {
   //ericw --
 
   //FXR -- collision data
-  intptr_t coll_tris;
+  intptr_t colltris;
   //
 
   int numposes;
