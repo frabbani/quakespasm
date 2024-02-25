@@ -503,22 +503,23 @@ Transform makeTransform(Vec3 p, Vec3 angles) {
 }
 
 Vec3 transformVec(const Transform *transform, Vec3 p, TransformSpace space, qboolean direction_only) {
+  Vec3 r = vec3Zero();
   if (space == LocalSpace) {
     if (!direction_only)
       p = vec3Make(transform->p, p);
-    p.x = vec3Dot(p, transform->basis.f);
-    p.y = vec3Dot(p, transform->basis.r);
-    p.z = vec3Dot(p, transform->basis.u);
+    r.x = vec3Dot(p, transform->basis.f);
+    r.y = vec3Dot(p, transform->basis.r);
+    r.z = vec3Dot(p, transform->basis.u);
   } else {
     Vec3 fru[3];
     for (int i = 0; i < 3; i++) {
       fru[i] = vec3Scale(transform->basis.fru[i], p.f3[i]);
     }
-    p = vec3Add(fru[0], vec3Add(fru[1], fru[2]));
+    r = vec3Add(fru[0], vec3Add(fru[1], fru[2]));
     if (!direction_only)
-      p = vec3Add(p, transform->p);
+      r = vec3Add(r, transform->p);
   }
-  return p;
+  return r;
 }
 
 Plane transformPlane(const Transform *transform, Plane plane, TransformSpace space) {
@@ -529,8 +530,8 @@ Plane transformPlane(const Transform *transform, Plane plane, TransformSpace spa
 }
 
 Ray transformRay(const Transform *transform, const Ray *ray, TransformSpace space) {
-  transformVec(transform, ray->o, space, false);
-  transformVec(transform, ray->e, space, false);
-  return makeRay(ray->o, ray->e);
+  Vec3 o = transformVec(transform, ray->o, space, false);
+  Vec3 e = transformVec(transform, ray->e, space, false);
+  return makeRay(o, e);
 }
 

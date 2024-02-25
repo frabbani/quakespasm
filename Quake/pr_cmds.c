@@ -742,23 +742,20 @@ static void PF_trace_entity(void) {
     pose += (int) (sv.time / hdr->frames[frame].interval) % numposes;
   }
 
-  /*
-   static qboolean first = true;
-   if( first ){
-   coll_tris_dump_obj( &tris[ pose * hdr->numtris ], hdr->numtris, mod->name );
-   first = !first;
-   }
-   */
-
   qboolean collision = 0;
   CollTri *tri = NULL;
   Ray ray = makeRay(p1, p2);
   len = ray.len;
 
-  //NOT OPTIMIZED, but is easier to understand and works
-  //ideally, we would pass ray by reference eliminate the repeated ray_make call,
-  //but this works and thats what i really care about (perfomance is fine...)
+  //NOT OPTIMIZED!
   ray = transformRay(&transform, &ray, LocalSpace);
+
+//  static qboolean first = true;
+//  if (first) {
+//    dumpCollTrisAndRayToObj(&tris[pose * hdr->numtris], hdr->numtris, ray, mod->name);
+//    first = !first;
+//  }
+
   Plane plane;
   p1 = ray.o;
   p2 = ray.e;
@@ -767,8 +764,6 @@ static void PF_trace_entity(void) {
     if (!collTriRayIsect(tri, &ray, &p2, NULL, NULL, NULL))
       continue;
     plane = tri->plane;
-    plane.n = vec3Scale(plane.n, -1.0f);
-    plane.dist *= -1.0f;
     ray = makeRay(p1, p2);
     collision = true;
   }
@@ -777,6 +772,8 @@ static void PF_trace_entity(void) {
     pr_global_struct->trace_fraction = 1.0f;
     return;
   }
+  plane.n = vec3Scale(plane.n, -1.0f);
+  plane.dist *= -1.0f;
 
   ray = transformRay(&transform, &ray, WorldSpace);
   plane = transformPlane(&transform, plane, WorldSpace);

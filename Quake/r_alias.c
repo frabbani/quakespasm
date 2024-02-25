@@ -177,7 +177,7 @@ void GLAlias_CreateShaders(void) {
       "	fog = clamp(fog, 0.0, 1.0);\n"
       "	result = mix(gl_Fog.color, result, fog);\n"
       "	result.a = gl_Color.a;\n"  // FIXME: This will make almost transparent things cut holes though heavy fog
-      "	gl_FragColor = vec4(1.0); //gl_Color; //result;\n"//FXR
+      "	gl_FragColor = result;\n"//FXR
       "}\n";
 
   if (!gl_glsl_alias_able)

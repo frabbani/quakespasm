@@ -76,9 +76,9 @@ void dumpCollTrisToObj(const CollTri *tris, int num_tris, const char *name) {
   printf("dumping file '%s'\n", fn);
   FILE *fp = fopen(fn, "w");
   for (int32 i = 0; i < num_tris; i++) {
-    fprintf(fp, " v %f %f %f\n", tris[i].ps[0].f3[0], tris[i].ps[0].f3[1], tris[i].ps[0].f3[2]);
-    fprintf(fp, " v %f %f %f\n", tris[i].ps[1].f3[0], tris[i].ps[1].f3[1], tris[i].ps[1].f3[2]);
-    fprintf(fp, " v %f %f %f\n", tris[i].ps[2].f3[0], tris[i].ps[2].f3[1], tris[i].ps[2].f3[2]);
+    fprintf(fp, "v %f %f %f\n", tris[i].ps[0].x, tris[i].ps[0].y, tris[i].ps[0].z);
+    fprintf(fp, "v %f %f %f\n", tris[i].ps[1].x, tris[i].ps[1].y, tris[i].ps[1].z);
+    fprintf(fp, "v %f %f %f\n", tris[i].ps[2].x, tris[i].ps[2].y, tris[i].ps[2].z);
   }
 
   for (int32 i = 0; i < num_tris; i++) {
@@ -92,3 +92,36 @@ void dumpCollTrisToObj(const CollTri *tris, int num_tris, const char *name) {
 
 }
 
+void dumpCollTrisAndRayToObj(const CollTri *tris, int num_tris, Ray ray, const char *name) {
+
+  char fn[64];
+  sprintf(fn, "debug/%s.obj", name);
+  printf("dumping file '%s'\n", fn);
+  FILE *fp = fopen(fn, "w");
+
+  Vec3 p = ray.o;
+  if (fabsf(ray.o.x) > 0.80f)
+    p.z += 3.0f;
+  else
+    p.x += 3.0f;
+
+  fprintf(fp, "v %f %f %f\n", ray.o.x, ray.o.y, ray.o.z);
+  fprintf(fp, "v %f %f %f\n", p.x, p.y, p.z);
+  fprintf(fp, "v %f %f %f\n", ray.e.x, ray.e.y, ray.e.z);
+
+  for (int32 i = 0; i < num_tris; i++) {
+    fprintf(fp, "v %f %f %f\n", tris[i].ps[0].x, tris[i].ps[0].y, tris[i].ps[0].z);
+    fprintf(fp, "v %f %f %f\n", tris[i].ps[1].x, tris[i].ps[1].y, tris[i].ps[1].z);
+    fprintf(fp, "v %f %f %f\n", tris[i].ps[2].x, tris[i].ps[2].y, tris[i].ps[2].z);
+  }
+
+  fprintf(fp, "f %d %d %d\n", 1, 2, 3);
+  for (int32 i = 0; i < num_tris; i++) {
+    int a = i * 3 + 4;
+    int b = i * 3 + 5;
+    int c = i * 3 + 6;
+    fprintf(fp, " f %d %d %d\n", a, b, c);
+  }
+  fclose(fp);
+
+}
