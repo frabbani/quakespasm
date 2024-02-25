@@ -691,8 +691,8 @@ static void PF_trace_entity(void) {
   v1 = G_VECTOR(OFS_PARM1);
   v2 = G_VECTOR(OFS_PARM2);
 
-  Vec3 p1 = vec3_(v1[0], v1[1], v1[2]);
-  Vec3 p2 = vec3_(v2[0], v2[1], v2[2]);
+  Vec3 p1 = toVec3(v1);
+  Vec3 p2 = toVec3(v2);
 
   /* FIXME FIXME FIXME: Why do we hit this with certain progs.dat ?? */
   if (developer.value) {
@@ -759,12 +759,14 @@ static void PF_trace_entity(void) {
   Plane plane;
   p1 = ray.o;
   p2 = ray.e;
-  for (int32 i = 0; i < hdr->numtris; i++) {
+  for (int i = 0; i < hdr->numtris; i++) {
     tri = &tris[pose * hdr->numtris + i];
-    if (!collTriRayIsect(tri, &ray, &p2, NULL, NULL, NULL))
+    float coll_len;
+    if (!collTriRayIsect(tri, &ray, &p2, &coll_len, NULL, NULL))
       continue;
     plane = tri->plane;
-    ray = makeRay(p1, p2);
+    ray.e = p2;
+    ray.len = coll_len;
     collision = true;
   }
   if (!collision) {
