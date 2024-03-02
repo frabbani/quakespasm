@@ -1,9 +1,9 @@
 #include "collision.h"
 
-CollTri make_colltri(Vec3 p1, Vec3 p2, Vec3 p3) {
+Colltri make_colltri(Vec3 p1, Vec3 p2, Vec3 p3) {
   const float skinny = 0.9998f;  // 1 degree skinny triangle cos(1)
 
-  CollTri tri = { 0 };
+  Colltri tri = { 0 };
   Vec3 u, v, w;
 
   tri.valid = false;
@@ -40,7 +40,7 @@ CollTri make_colltri(Vec3 p1, Vec3 p2, Vec3 p3) {
   return tri;
 }
 
-qboolean colltri_ray_isect(const CollTri *tri, const Ray *ray, Vec3 *p, float *len, float *mu, float *nu) {
+qboolean colltri_ray_isect(const Colltri *tri, const Ray *ray, Vec3 *p, float *len, float *mu, float *nu) {
   if (!tri->valid || !ray || !p)
     return false;
 
@@ -69,7 +69,7 @@ qboolean colltri_ray_isect(const CollTri *tri, const Ray *ray, Vec3 *p, float *l
   return true;
 }
 
-void dump_colltri_to_obj(const CollTri *tris, int num_tris, const char *name) {
+void dump_colltri_to_obj(const Colltri *tris, int num_tris, const char *name) {
 
   char fn[64];
   sprintf(fn, "debug/%s.obj", name);
@@ -92,7 +92,7 @@ void dump_colltri_to_obj(const CollTri *tris, int num_tris, const char *name) {
 
 }
 
-void dump_colltri_ray_to_obj(const CollTri *tris, int num_tris, Ray ray, const char *name) {
+void dump_colltri_ray_to_obj(const Colltri *tris, int num_tris, Ray ray, const char *name) {
 
   char fn[64];
   sprintf(fn, "debug/%s.obj", name);

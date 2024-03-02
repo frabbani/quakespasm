@@ -445,9 +445,9 @@ void R_SetupGL(void) {
 
   Vec3 p, r, l, u;
   p = v3_(r_refdef.vieworg[0], r_refdef.vieworg[1], r_refdef.vieworg[2]);
-  l = v3x();
-  u = v3z();
-  r = v3cross(l, u);
+  l = v3l();  // v3x();
+  u = v3u();  // v3z();
+  r = v3r();  //v3cross(l, u);
 
   l = v3rot(l, u, r_refdef.viewangles[YAW] * M_PI_DIV_180);
   r = v3rot(r, u, r_refdef.viewangles[YAW] * M_PI_DIV_180);
@@ -468,12 +468,12 @@ void R_SetupGL(void) {
   //
   // set drawing parms
   //
-  if (gl_cull.value)
-    glEnable( GL_CULL_FACE);
-  else
-    glDisable( GL_CULL_FACE);
+//  if (gl_cull.value)
+//    glEnable( GL_CULL_FACE);
+//  else
+//    glDisable( GL_CULL_FACE);
 
-  mygl->cull.on = GL_FALSE;
+  mygl->cull.on = gl_cull.value ? GL_TRUE : GL_FALSE;
   mygl->cull.cullMode = MYGL_BACK;
   mygl->cull.frontIsCCW = GL_FALSE;
   MyGL_resetCull();

@@ -730,7 +730,7 @@ static void PF_trace_entity(void) {
   }
 
   aliashdr_t *hdr = (aliashdr_t*) Mod_Extradata(mod);
-  CollTri *tris = (CollTri*) ((intptr_t) hdr + hdr->colltris);
+  Colltri *tris = (Colltri*) ((intptr_t) hdr + hdr->colltris);
   Transform transform = make_transform(toVec3(ent->v.origin), toVec3(ent->v.angles));
 
   int32 frame = (int32) ent->v.frame;
@@ -743,7 +743,7 @@ static void PF_trace_entity(void) {
   }
 
   qboolean collision = 0;
-  CollTri *tri = NULL;
+  Colltri *tri = NULL;
   Ray ray = make_ray(p1, p2);
   len = ray.len;
 

@@ -14,6 +14,10 @@ extern Vec3 v3x();
 extern Vec3 v3y();
 extern Vec3 v3z();
 
+extern Vec3 v3r();
+extern Vec3 v3l();
+extern Vec3 v3u();
+
 extern Vec2 v2_(float x, float y);
 
 extern Vec2 v2transf(Mat2 M, Vec2 v);

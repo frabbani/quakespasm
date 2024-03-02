@@ -44,15 +44,15 @@ Vec3 v3z() {
   return vec3ZAxis;
 }
 
-Vec3 vec3R() {
+Vec3 v3r() {
   return vec3RAxis;
 }
 
-Vec3 vec3L() {
+Vec3 v3l() {
   return vec3FAxis;
 }
 
-Vec3 vec3U() {
+Vec3 v3u() {
   return vec3UAxis;
 }
 

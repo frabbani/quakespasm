@@ -2501,7 +2501,7 @@ void Mod_LoadAliasCollision(aliashdr_t *hdr) {
    fprintf( fp, " *  - frame %d name: %s\n", i, hdr->frames[i].name );
    */
 
-  CollTri *colltris = (CollTri*) Hunk_Alloc(hdr->numposes * hdr->numtris * sizeof(CollTri));
+  Colltri *colltris = (Colltri*) Hunk_Alloc(hdr->numposes * hdr->numtris * sizeof(Colltri));
 
   hdr->colltris = (intptr_t) colltris - (intptr_t) hdr;
 
