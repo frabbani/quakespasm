@@ -605,12 +605,15 @@ void R_DrawAliasModel(entity_t *e) {
   Vec3 p, r, l, u;
   p = v3_(lerpdata.origin[0], lerpdata.origin[1], lerpdata.origin[2]);
 
-  l = v3rot(v3y(), v3z(), lerpdata.angles[YAW] * M_PI_DIV_180);
-  r = v3rot(v3x(), v3z(), lerpdata.angles[YAW] * M_PI_DIV_180);
-  l = v3rot(l, r, -lerpdata.angles[PITCH] * M_PI_DIV_180);
-  u = v3rot(v3z(), r, -lerpdata.angles[PITCH] * M_PI_DIV_180);
+  l = v3x();
+  r = v3y();
+  u = v3z();
+  l = v3rot(l, u, (lerpdata.angles[YAW]) * M_PI_DIV_180);
+  r = v3rot(r, u, (lerpdata.angles[YAW]) * M_PI_DIV_180);
+  l = v3rot(l, r, (-lerpdata.angles[PITCH]) * M_PI_DIV_180);
+  u = v3rot(u, r, (-lerpdata.angles[PITCH]) * M_PI_DIV_180);
 
-  Mat4 W = m4world(p, r, l, u);
+  Mat4 W = m4world(p, l, r, u);
   Mat4 T = m4ident();
 
   // decode MDL vertices
