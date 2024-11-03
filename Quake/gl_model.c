@@ -300,6 +300,12 @@ qmodel_t* Mod_LoadModel(qmodel_t *mod, qboolean crash) {
 
   }
 
+  char *ext = q_strcasestr(mod->name, ".mar");
+  if (ext) {
+    Sys_Printf("%s: model '%s' has associated model archive\n", __FUNCTION__);
+    Q_strcpy(ext, ".mdl");
+  }
+
 //
 // load the file
 //
@@ -2513,7 +2519,7 @@ void Mod_LoadAliasCollision(aliashdr_t *hdr) {
       int v1 = t->vertindex[1];
       int v2 = t->vertindex[2];
 
-      Vec3 p0, p1, p2;
+      mygl_vec3 p0, p1, p2;
       for (k = 0; k < 3; k++) {
         p0.f3[k] = poseverts[i][v0].v[k] * hdr->scale[k] + hdr->scale_origin[k];
         p1.f3[k] = poseverts[i][v1].v[k] * hdr->scale[k] + hdr->scale_origin[k];

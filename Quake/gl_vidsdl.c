@@ -1195,7 +1195,7 @@ static void GL_CheckExtensions(void) {
     Con_Warning("GLSL alias model rendering not available, using Fitz renderer\n");
   }
 
-  Sys_Printf("*** FXR: glsl: %d\n", gl_glsl_alias_able);
+  Sys_Printf("[FXR] glsl: %d\n", gl_glsl_alias_able);
 
 }
 

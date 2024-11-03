@@ -126,42 +126,42 @@ float anglemod(float a);
 typedef struct basis_s {
   union {
     struct {
-      Vec3 l, r, u;
+      mygl_vec3 l, r, u;
     };
-    Vec3 lru[3];
+    mygl_vec3 lru[3];
   };
 } Basis;
 
 // FXR
-Vec3 toVec3(vec3_t v);
+#define mygl_tov3(v) mygl_v3(v[0], v[1], v[2])
 
 #define TOL	(1e-7f)
 #define TOL_SQ	(1e-14f)
 
 typedef struct plane_s {
-  Vec3 n;
+  mygl_vec3 n;
   float dist;
 } Plane;
 
-Plane make_plane(Vec3 p, Vec3 n);
+Plane make_plane(mygl_vec3 p, mygl_vec3 n);
 
 typedef struct ray_s {
   union {
-    Vec3 ps[2];
+    mygl_vec3 ps[2];
     struct {
-      Vec3 o, e;  //origin/end
+      mygl_vec3 o, e;  //origin/end
     };
   };
-  Vec3 d;     //direction unit vector
+  mygl_vec3 d;     //direction unit vector
   float len;    //v1 + len*d = v2
 } Ray;
 
-Ray make_ray(Vec3 p, Vec3 p2);
-qboolean ray_isect_plane(const Ray *ray, Plane plane, Vec3 *p, float *dist);
+Ray make_ray(mygl_vec3 p, mygl_vec3 p2);
+qboolean ray_isect_plane(const Ray *ray, Plane plane, mygl_vec3 *p, float *dist);
 
 typedef struct transform_s {
-  Vec3 p, p_loc;
-  Vec3 angles;
+  mygl_vec3 p, p_loc;
+  mygl_vec3 angles;
   Basis basis;
 } Transform;
 
@@ -170,8 +170,8 @@ typedef enum transform_space_e {
   WorldSpace,
 } TransformSpace;
 
-Transform make_transform(Vec3 p, Vec3 angles);
-Vec3 transform_vec3(const Transform *transform, Vec3 p, TransformSpace space, qboolean direction_only);
+Transform make_transform(mygl_vec3 p, mygl_vec3 angles);
+mygl_vec3 transform_vec3(const Transform *transform, mygl_vec3 p, TransformSpace space, qboolean direction_only);
 Plane transform_plane(const Transform *transform, Plane plane, TransformSpace space);
 Ray transform_ray(const Transform *transform, const Ray *ray, TransformSpace space);
 

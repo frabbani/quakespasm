@@ -28,14 +28,14 @@ char file_stream_get_char(void *params) {
 
     fs->fp = fopen(filename, "r");
     if (!fs->fp) {
-      printf("%s - FAILED to open file '%s'\n", __FUNCTION__, filename);
+      printf("[FXR] %s - FAILED to open file '%s'\n", __FUNCTION__, filename);
       fs->status = FS_ERROR;
       return '\0';
     }
     fseek(fs->fp, 0, SEEK_END);
     fs->size = ftell(fs->fp);
     if (0 == fs->size) {
-      printf("%s - INVALID FILE SIZE for file '%s'!\n", __FUNCTION__, filename);
+      printf("[FXR] %s - INVALID FILE SIZE for file '%s'!\n", __FUNCTION__, filename);
       fs->status = FS_ERROR;
       fclose(fs->fp);
       fs->fp = NULL;
@@ -43,7 +43,7 @@ char file_stream_get_char(void *params) {
     }
     fs->status = FS_STREAMING;
     fseek(fs->fp, 0, SEEK_SET);
-    printf("%s - file '%s' opened for streaming (size=%d)\n", __FUNCTION__, filename, (int) fs->size);
+    printf("[FXR] %s - file '%s' opened for streaming (size=%d)\n", __FUNCTION__, filename, (int) fs->size);
     fs->pos = fs->read = 0;
   }
 
@@ -58,7 +58,7 @@ char file_stream_get_char(void *params) {
         fs->status = feof(fs->fp) ? FS_EOF : FS_ERROR;
         fclose(fs->fp);
         fs->fp = NULL;
-        printf("%s - file '%s' closed\n", __FUNCTION__, filename);
+        printf("[FXR] %s - file '%s' closed\n", __FUNCTION__, filename);
         return '\0';
       }
     }

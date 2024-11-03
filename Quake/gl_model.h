@@ -25,6 +25,7 @@
 
 #include "modelgen.h"
 #include "spritegn.h"
+#include "mygl.h"
 
 /*
 
@@ -464,7 +465,7 @@ typedef struct qmodel_s {
 //
 // alias model
 //
-  char title[64];
+  mygl_str64 mygl_archive;
 
   GLuint meshvbo;
   GLuint meshindexesvbo;

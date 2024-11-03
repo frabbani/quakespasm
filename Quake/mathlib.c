@@ -430,42 +430,37 @@ fixed16_t Invert24To16(fixed16_t val) {
   return (fixed16_t) (((double) 0x10000 * (double) 0x1000000 / (double) val) + 0.5);
 }
 
-// FXR
-Vec3 toVec3(vec3_t v) {
-  return v3_(v[0], v[1], v[2]);
-}
-
-Plane make_plane(Vec3 p, Vec3 n) {
+Plane make_plane(mygl_vec3 p, mygl_vec3 n) {
   Plane plane;
-  plane.n = v3norm(n);
-  plane.dist = v3dot(p, plane.n);
+  plane.n = mygl_v3norm(n);
+  plane.dist = mygl_v3dot(p, plane.n);
   return plane;
 }
 
-Ray make_ray(Vec3 p, Vec3 p2) {
+Ray make_ray(mygl_vec3 p, mygl_vec3 p2) {
   Ray ray;
   ray.ps[0] = p;
   ray.ps[1] = p2;
 
-  ray.d = v3make(ray.o, ray.e);
-  if (v3dot(ray.d, ray.d) > TOL_SQ) {
-    ray.len = v3mag(ray.d);
-    ray.d = v3scale(ray.d, 1.0f / ray.len);
+  ray.d = mygl_v3point(ray.o, ray.e);
+  if (mygl_v3dot(ray.d, ray.d) > TOL_SQ) {
+    ray.len = mygl_v3mag(ray.d);
+    ray.d = mygl_v3scale(ray.d, 1.0f / ray.len);
   } else {
-    ray.d = v3zero();
+    ray.d = mygl_v3zero();
     ray.len = 0.0f;
   }
   return ray;
 }
 
-qboolean ray_isect_plane(const Ray *ray, Plane plane, Vec3 *p, float *dist) {
+qboolean ray_isect_plane(const Ray *ray, Plane plane, mygl_vec3 *p, float *dist) {
   const float grazing = 0.01745f;  //~1 degs grazing angle (sin(~1))
   if (ray->len < TOL)
     return false;
 
   float ndotd, odotn, alpha;
 
-  ndotd = v3dot(plane.n, ray->d);
+  ndotd = mygl_v3dot(plane.n, ray->d);
   if (fabsf(ndotd) < grazing)  //assume not touching at grazing angle
     return false;
 
@@ -474,64 +469,64 @@ qboolean ray_isect_plane(const Ray *ray, Plane plane, Vec3 *p, float *dist) {
   //               alpha * dot( d, n ) = dist - dot( v, n )
   //                             alpha = ( dist - dot( v, n ) ) / dot( d, n )
 
-  odotn = v3dot(plane.n, ray->o);
+  odotn = mygl_v3dot(plane.n, ray->o);
   alpha = (plane.dist - odotn) / ndotd;
 
   if (alpha < 0.0f || alpha > ray->len)
     return false;
 
   if (p)
-    *p = v3add(ray->o, v3scale(ray->d, alpha));
+    *p = mygl_v3add(ray->o, mygl_v3scale(ray->d, alpha));
 
   if (dist)
     *dist = alpha;
   return true;
 }
 
-Transform make_transform(Vec3 p, Vec3 angles) {
+Transform make_transform(mygl_vec3 p, mygl_vec3 angles) {
   Transform t = { { { { 0 } } } };
   t.p = p;
   t.angles = angles;
 
   AngleVectors(t.angles.f3, t.basis.l.f3, t.basis.r.f3, t.basis.u.f3);
-  v3scale(t.basis.r, -1.0f);  //-y is right, +y is left
+  mygl_v3scale(t.basis.r, -1.0f);  //-y is right, +y is left
 
-  t.p_loc.x = v3dot(t.p, t.basis.lru[0]);
-  t.p_loc.y = v3dot(t.p, t.basis.lru[1]);
-  t.p_loc.z = v3dot(t.p, t.basis.lru[2]);
+  t.p_loc.x = mygl_v3dot(t.p, t.basis.lru[0]);
+  t.p_loc.y = mygl_v3dot(t.p, t.basis.lru[1]);
+  t.p_loc.z = mygl_v3dot(t.p, t.basis.lru[2]);
   return t;
 }
 
-Vec3 transform_vec3(const Transform *transform, Vec3 p, TransformSpace space, qboolean direction_only) {
-  Vec3 r = v3zero();
+mygl_vec3 transform_vec3(const Transform *transform, mygl_vec3 p, TransformSpace space, qboolean direction_only) {
+  mygl_vec3 r = mygl_v3zero();
   if (space == LocalSpace) {
     if (!direction_only)
-      p = v3make(transform->p, p);
-    r.x = v3dot(p, transform->basis.l);
-    r.y = v3dot(p, transform->basis.r);
-    r.z = v3dot(p, transform->basis.u);
+      p = mygl_v3point(transform->p, p);
+    r.x = mygl_v3dot(p, transform->basis.l);
+    r.y = mygl_v3dot(p, transform->basis.r);
+    r.z = mygl_v3dot(p, transform->basis.u);
   } else {
-    Vec3 lru[3];
+    mygl_vec3 lru[3];
     for (int i = 0; i < 3; i++) {
-      lru[i] = v3scale(transform->basis.lru[i], p.f3[i]);
+      lru[i] = mygl_v3scale(transform->basis.lru[i], p.f3[i]);
     }
-    r = v3add(lru[0], v3add(lru[1], lru[2]));
+    r = mygl_v3add(lru[0], mygl_v3add(lru[1], lru[2]));
     if (!direction_only)
-      r = v3add(r, transform->p);
+      r = mygl_v3add(r, transform->p);
   }
   return r;
 }
 
 Plane transform_plane(const Transform *transform, Plane plane, TransformSpace space) {
-  Vec3 p = transform_vec3(transform, v3scale(plane.n, plane.dist), space, false);
+  mygl_vec3 p = transform_vec3(transform, mygl_v3scale(plane.n, plane.dist), space, false);
   plane.n = transform_vec3(transform, plane.n, space, true);
-  plane.dist = v3dot(p, plane.n);
+  plane.dist = mygl_v3dot(p, plane.n);
   return plane;
 }
 
 Ray transform_ray(const Transform *transform, const Ray *ray, TransformSpace space) {
-  Vec3 o = transform_vec3(transform, ray->o, space, false);
-  Vec3 e = transform_vec3(transform, ray->e, space, false);
+  mygl_vec3 o = transform_vec3(transform, ray->o, space, false);
+  mygl_vec3 e = transform_vec3(transform, ray->e, space, false);
   return make_ray(o, e);
 }
 
