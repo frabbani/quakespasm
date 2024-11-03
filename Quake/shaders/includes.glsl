@@ -25,3 +25,13 @@ uniform MyGL mygl;
 #ifdef __frag__
 #define vary in
 #endif
+
+
+#ifdef VTX_P_T
+
+#ifdef __vert__
+layout(location = 0) in vec4 vtx_p;
+layout(location = 1) in vec4 vtx_t;
+#endif
+
+#endif

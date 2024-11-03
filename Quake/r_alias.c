@@ -847,8 +847,27 @@ void R_DrawAliasModel(entity_t *e) {
    }
    }
    }*/
-  GL_DrawAliasFrame_GLSL(paliashdr, lerpdata, tx, fb);
 
+  char *ext = q_strcasestr(e->model->mygl_archive.chars, "armor");
+  if (!ext) {
+    GL_DrawAliasFrame_GLSL(paliashdr, lerpdata, tx, fb);
+  } else {
+    mygl->material = MyGL_str64("Vertex Position and Texture (Animated)");
+    mygl->W_matrix = W;
+    uint32_t frameSamplers[] = { 0, 1, 0, 999 };
+    MyGL_setModelArchiveTextures(e->model->mygl_archive.chars, 0u, 0u, frameSamplers);
+    MyGL_bindSamplers();
+
+    GLuint prevVbo, prevIbo;
+    glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*) &prevVbo);
+    glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, (GLint*) &prevIbo);
+
+    MyGL_drawModelArchive(e->model->mygl_archive.chars);
+    GL_ClearBufferBindings();
+    //glBindBuffer(GL_ARRAY_BUFFER, prevVbo);  // Bind the previous VBO
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, prevIbo);  // Bind the previous IBO
+
+  }
   cleanup: glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
   glShadeModel( GL_FLAT);
@@ -858,6 +877,7 @@ void R_DrawAliasModel(entity_t *e) {
     glDisable( GL_ALPHA_TEST);
   glColor3f(1, 1, 1);
   glPopMatrix();
+
 }
 
 //johnfitz -- values for shadow matrix

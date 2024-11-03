@@ -58,7 +58,5 @@ extern mygl_mat4 mygl_m4view(mygl_vec3 p, mygl_vec3 r, mygl_vec3 l, mygl_vec3 u)
 extern mygl_mat4 mygl_m4world(mygl_vec3 p, mygl_vec3 r, mygl_vec3 l, mygl_vec3 u);
 
 typedef MyGL_Str64 mygl_str64;
-#define MyGL_str64 mygl_s64
-#define MyGL_str64Cat mygl_s64cat
-#define MyGL_str64Fmt mygl_s64fmt
-
+extern mygl_str64 mygl_s64(const char *str);
+extern mygl_str64 mygl_s64cat(mygl_str64 s, const char *str);

@@ -431,6 +431,10 @@ void R_SetupGL(void) {
   glLoadIdentity();
   scale = CLAMP(1, (int )r_scale.value, 4);  // ericw -- see R_ScaleView
   glViewport(glx + r_refdef.vrect.x, gly + glheight - r_refdef.vrect.y - r_refdef.vrect.height, r_refdef.vrect.width / scale, r_refdef.vrect.height / scale);
+  mygl->viewPort.x = glx + r_refdef.vrect.x;
+  mygl->viewPort.y = gly + glheight - r_refdef.vrect.y - r_refdef.vrect.height;
+  mygl->viewPort.w = r_refdef.vrect.width / scale;
+  mygl->viewPort.h = r_refdef.vrect.height / scale;
 
   //johnfitz
   //GL_SetFrustum(r_fovx, r_fovy);  //johnfitz -- use r_fov* vars
@@ -472,6 +476,10 @@ void R_SetupGL(void) {
 //    glEnable( GL_CULL_FACE);
 //  else
 //    glDisable( GL_CULL_FACE);
+
+  mygl->P_matrix = P;
+  mygl->V_matrix = V;
+  mygl->W_matrix = mygl_m4ident();
 
   mygl->cull.on = gl_cull.value ? GL_TRUE : GL_FALSE;
   mygl->cull.cullMode = MYGL_BACK;
@@ -570,6 +578,7 @@ void R_SetupView(void) {
   //johnfitz
 
   R_SetFrustum(r_fovx, r_fovy);  //johnfitz -- use r_fov* vars
+  mygl->P_matrix = mygl_m4persp(1.0, r_fovx, 0.01f, 3000.0f);
 
   R_MarkSurfaces();  //johnfitz -- create texture chains from PVS
 

@@ -10,6 +10,16 @@ MyGL *mygl = NULL;
 
 MYGLSTRNFUNCS(64);
 
+mygl_str64 mygl_s64(const char *str) {
+  return MyGL_str64(str);
+}
+
+mygl_str64 mygl_s64cat(mygl_str64 s, const char *str) {
+  strncat(s.chars, str, sizeof(s.chars) - 1);
+  s.chars[sizeof(s.chars) - 1] = '\0';
+  return s;
+}
+
 mygl_vec2 mygl_v2(float x, float y) {
   return MyGL_vec2(x, y);
 }

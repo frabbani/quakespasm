@@ -300,12 +300,6 @@ qmodel_t* Mod_LoadModel(qmodel_t *mod, qboolean crash) {
 
   }
 
-  char *ext = q_strcasestr(mod->name, ".mar");
-  if (ext) {
-    Sys_Printf("%s: model '%s' has associated model archive\n", __FUNCTION__);
-    Q_strcpy(ext, ".mdl");
-  }
-
 //
 // load the file
 //
@@ -347,6 +341,22 @@ qmodel_t* Mod_LoadModel(qmodel_t *mod, qboolean crash) {
       break;
   }
 
+  if (q_strcasestr(mod->name, "armor.mdl")) {
+    mygl_str64 name;
+    Q_strcpy(name.chars, mod->name);
+    char *ext = q_strcasestr(name.chars, ".mdl");
+    Q_strcpy(ext, ".mar");
+    int len = 0;
+    byte *data = COM_LoadMallocFile2(name.chars, NULL, &len);
+    Sys_Printf("%s : length %d\n", __FUNCTION__, len);
+    GLboolean loaded = MyGL_loadModelArchive(name.chars, data, len);
+    if (loaded == GL_TRUE) {
+      Sys_Printf("%s: loaded model archive '%s'\n", __FUNCTION__, name.chars);
+      mod->mygl_archive = name;
+    }
+    free(data);
+  } else
+    Q_memset(mod->mygl_archive.chars, '\0', 64);
   return mod;
 }
 
