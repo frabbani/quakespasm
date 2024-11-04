@@ -26,6 +26,16 @@ uniform MyGL mygl;
 #define vary in
 #endif
 
+#ifdef VTX_P_N_T
+
+#ifdef __vert__
+layout(location = 0) in vec4 vtx_p;
+layout(location = 1) in vec4 vtx_n;
+layout(location = 2) in vec4 vtx_t;
+#endif
+
+#endif
+
 
 #ifdef VTX_P_T
 

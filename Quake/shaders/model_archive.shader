@@ -15,7 +15,7 @@ Depth LEqual
 **/
 
 #define TRANSFORM
-#define VTX_P_T
+#define VTX_P_N_T
 #include "includes.glsl"
 
 vary vec4 var_t;
@@ -28,8 +28,8 @@ layout(binding = 2) uniform samplerBuffer frame2;
 uniform float lerpValue = 0.0;
 
 void main(){
-  vec3 p = texelFetch( frame, gl_VertexID ).xyz;
-  vec3 p2 = texelFetch( frame2, gl_VertexID ).xyz;
+  vec3 p = texelFetch( frame, gl_VertexID * 2 ).xyz;
+  vec3 p2 = texelFetch( frame2, gl_VertexID * 2 ).xyz;
   p = mix( p, p2, vec3(lerpValue) );
   gl_Position = PVW * vec4(p, 1.0); //vtx_p
   var_t = vtx_t;

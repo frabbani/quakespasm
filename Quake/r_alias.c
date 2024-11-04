@@ -592,7 +592,7 @@ void R_DrawAliasModel(entity_t *e) {
   // cull it
   //
   if (R_CullModelForEntity(e))
-    return;
+    goto cleanup;
 
   //
   // transform it
@@ -647,7 +647,7 @@ void R_DrawAliasModel(entity_t *e) {
   else
     entalpha = ENTALPHA_DECODE(e->alpha);
   if (entalpha == 0)
-    goto cleanup;
+    return;
   if (entalpha < 1) {
     if (!gl_texture_env_combine)
       overbright = false;  //overbright can't be done in a single pass without combiners
@@ -854,18 +854,16 @@ void R_DrawAliasModel(entity_t *e) {
   } else {
     mygl->material = MyGL_str64("Vertex Position and Texture (Animated)");
     mygl->W_matrix = W;
+    mygl->cull.frontIsCCW = GL_TRUE;
+    MyGL_applyCull();
     uint32_t frameSamplers[] = { 0, 1, 0, 999 };
     MyGL_setModelArchiveTextures(e->model->mygl_archive.chars, 0u, 0u, frameSamplers);
     MyGL_bindSamplers();
-
-    GLuint prevVbo, prevIbo;
-    glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*) &prevVbo);
-    glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, (GLint*) &prevIbo);
-
     MyGL_drawModelArchive(e->model->mygl_archive.chars);
+    GL_ClearBindings();
     GL_ClearBufferBindings();
-    //glBindBuffer(GL_ARRAY_BUFFER, prevVbo);  // Bind the previous VBO
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, prevIbo);  // Bind the previous IBO
+    mygl->cull.frontIsCCW = GL_FALSE;
+    MyGL_applyCull();
 
   }
   cleanup: glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
