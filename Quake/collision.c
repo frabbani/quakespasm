@@ -1,46 +1,46 @@
 #include "collision.h"
 
-Colltri make_colltri(mygl_vec3 p1, mygl_vec3 p2, mygl_vec3 p3) {
+colltri_t make_colltri(vec3 p1, vec3 p2, vec3 p3) {
   const float skinny = 0.9998f;  // 1 degree skinny triangle cos(1)
 
-  Colltri tri = { 0 };
-  mygl_vec3 u, v, w;
+  colltri_t tri = { 0 };
+  vec3 u, v, w;
 
   tri.valid = false;
 
   tri.ps[0] = p1;
   tri.ps[1] = p2;
   tri.ps[2] = p3;
-  u = mygl_v3point(p1, p2);
-  v = mygl_v3point(p1, p3);
-  w = mygl_v3point(p2, p3);
-  if (mygl_v3dot(u, u) < TOL_SQ || mygl_v3dot(v, v) < TOL_SQ || mygl_v3dot(w, w) < TOL_SQ) {
+  u = v3point(p1, p2);
+  v = v3point(p1, p3);
+  w = v3point(p2, p3);
+  if (v3dot(u, u) < TOL_SQ || v3dot(v, v) < TOL_SQ || v3dot(w, w) < TOL_SQ) {
     return tri;
   }
-  u = mygl_v3norm(u);
-  v = mygl_v3norm(v);
-  w = mygl_v3norm(w);
-  if (fabsf(mygl_v3dot(u, v)) > skinny || fabsf(mygl_v3dot(v, w)) > skinny || fabsf(mygl_v3dot(w, u)) > skinny)
+  u = v3norm(u);
+  v = v3norm(v);
+  w = v3norm(w);
+  if (fabsf(v3dot(u, v)) > skinny || fabsf(v3dot(v, w)) > skinny || fabsf(v3dot(w, u)) > skinny)
     return tri;
 
   tri.o = p1;
-  tri.u = mygl_v3point(p1, p2);
-  tri.v = mygl_v3point(p1, p3);
+  tri.u = v3point(p1, p2);
+  tri.v = v3point(p1, p3);
 
-  mygl_mat2 M;
-  M.e00 = mygl_v3dot(tri.u, tri.u);
-  M.e01 = M.e10 = mygl_v3dot(tri.u, tri.v);
-  M.e11 = mygl_v3dot(tri.v, tri.v);
+  mat2 M;
+  M.e00 = v3dot(tri.u, tri.u);
+  M.e01 = M.e10 = v3dot(tri.u, tri.v);
+  M.e11 = v3dot(tri.v, tri.v);
 
-  tri.A = mygl_m2inv(M);
+  tri.A = m2inv(M);
   tri.valid = true;
 
-  tri.plane.n = mygl_v3norm(mygl_v3cross(tri.u, tri.v));
-  tri.plane.dist = mygl_v3dot(tri.o, tri.plane.n);
+  tri.plane.n = v3norm(v3cross(tri.u, tri.v));
+  tri.plane.dist = v3dot(tri.o, tri.plane.n);
   return tri;
 }
 
-qboolean colltri_ray_isect(const Colltri *tri, const Ray *ray, mygl_vec3 *p, float *len, float *mu, float *nu) {
+qboolean colltri_ray_isect(const colltri_t *tri, const Ray *ray, vec3 *p, float *len, float *mu, float *nu) {
   if (!tri->valid || !ray || !p)
     return false;
 
@@ -52,11 +52,11 @@ qboolean colltri_ray_isect(const Colltri *tri, const Ray *ray, mygl_vec3 *p, flo
     *len = dist;  //between 0 to ray length
   }
 
-  mygl_vec2 b;
-  mygl_vec3 v = mygl_v3point(tri->o, *p);
-  b.x = mygl_v3dot(v, tri->u);
-  b.y = mygl_v3dot(v, tri->v);
-  b = mygl_v2transf(tri->A, b);
+  vec2 b;
+  vec3 v = v3point(tri->o, *p);
+  b.x = v3dot(v, tri->u);
+  b.y = v3dot(v, tri->v);
+  b = v2transf(tri->A, b);
 
   if (mu)
     *mu = b.x;
@@ -69,7 +69,7 @@ qboolean colltri_ray_isect(const Colltri *tri, const Ray *ray, mygl_vec3 *p, flo
   return true;
 }
 
-void dump_colltri_to_obj(const Colltri *tris, int num_tris, const char *name) {
+void dump_colltri_to_obj(const colltri_t *tris, int num_tris, const char *name) {
 
   char fn[64];
   sprintf(fn, "debug/%s.obj", name);
@@ -92,14 +92,14 @@ void dump_colltri_to_obj(const Colltri *tris, int num_tris, const char *name) {
 
 }
 
-void dump_colltri_ray_to_obj(const Colltri *tris, int num_tris, Ray ray, const char *name) {
+void dump_colltri_ray_to_obj(const colltri_t *tris, int num_tris, Ray ray, const char *name) {
 
   char fn[64];
   sprintf(fn, "debug/%s.obj", name);
   printf("dumping file '%s'\n", fn);
   FILE *fp = fopen(fn, "w");
 
-  mygl_vec3 p = ray.o;
+  vec3 p = ray.o;
   if (fabsf(ray.o.x) > 0.80f)
     p.z += 3.0f;
   else

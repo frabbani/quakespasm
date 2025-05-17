@@ -2507,7 +2507,7 @@ void Mod_LoadAliasCollision(aliashdr_t *hdr) {
    fprintf( fp, " *  - frame %d name: %s\n", i, hdr->frames[i].name );
    */
 
-  Colltri *colltris = (Colltri*) Hunk_Alloc(hdr->numposes * hdr->numtris * sizeof(Colltri));
+  colltri_t *colltris = (colltri_t*) Hunk_Alloc(hdr->numposes * hdr->numtris * sizeof(colltri_t));
 
   hdr->colltris = (intptr_t) colltris - (intptr_t) hdr;
 
@@ -2519,11 +2519,11 @@ void Mod_LoadAliasCollision(aliashdr_t *hdr) {
       int v1 = t->vertindex[1];
       int v2 = t->vertindex[2];
 
-      mygl_vec3 p0, p1, p2;
+      vec3 p0, p1, p2;
       for (k = 0; k < 3; k++) {
-        p0.f3[k] = poseverts[i][v0].v[k] * hdr->scale[k] + hdr->scale_origin[k];
-        p1.f3[k] = poseverts[i][v1].v[k] * hdr->scale[k] + hdr->scale_origin[k];
-        p2.f3[k] = poseverts[i][v2].v[k] * hdr->scale[k] + hdr->scale_origin[k];
+        p0.xyz[k] = poseverts[i][v0].v[k] * hdr->scale[k] + hdr->scale_origin[k];
+        p1.xyz[k] = poseverts[i][v1].v[k] * hdr->scale[k] + hdr->scale_origin[k];
+        p2.xyz[k] = poseverts[i][v2].v[k] * hdr->scale[k] + hdr->scale_origin[k];
       }
       colltris[c++] = make_colltri(p0, p1, p2);
     }

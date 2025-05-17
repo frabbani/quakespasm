@@ -691,8 +691,8 @@ static void PF_trace_entity(void) {
   v1 = G_VECTOR(OFS_PARM1);
   v2 = G_VECTOR(OFS_PARM2);
 
-  mygl_vec3 p1 = mygl_tov3(v1);
-  mygl_vec3 p2 = mygl_tov3(v2);
+  vec3 p1 = TOVEC3(v1);
+  vec3 p2 = TOVEC3(v2);
 
   /* FIXME FIXME FIXME: Why do we hit this with certain progs.dat ?? */
   if (developer.value) {
@@ -706,7 +706,7 @@ static void PF_trace_entity(void) {
   if (IS_NAN(v2[0]) || IS_NAN(v2[1]) || IS_NAN(v2[2]))
     v2[0] = v2[1] = v2[2] = 0;
 
-  trace = SV_ClipMoveToEntity(ent, p1.f3, vec3_origin, vec3_origin, p2.f3);
+  trace = SV_ClipMoveToEntity(ent, p1.xyz, vec3_origin, vec3_origin, p2.xyz);
 
   pr_global_struct->trace_allsolid = trace.allsolid;
   pr_global_struct->trace_startsolid = trace.startsolid;
@@ -730,8 +730,8 @@ static void PF_trace_entity(void) {
   }
 
   aliashdr_t *hdr = (aliashdr_t*) Mod_Extradata(mod);
-  Colltri *tris = (Colltri*) ((intptr_t) hdr + hdr->colltris);
-  Transform transform = make_transform(mygl_tov3(ent->v.origin), mygl_tov3(ent->v.angles));
+  colltri_t *tris = (colltri_t*) ((intptr_t) hdr + hdr->colltris);
+  Transform transform = make_transform(TOVEC3(ent->v.origin), TOVEC3(ent->v.angles));
 
   int32 frame = (int32) ent->v.frame;
   int32 pose = hdr->frames[frame].firstpose;
@@ -743,7 +743,7 @@ static void PF_trace_entity(void) {
   }
 
   qboolean collision = 0;
-  Colltri *tri = NULL;
+  colltri_t *tri = NULL;
   Ray ray = make_ray(p1, p2);
   len = ray.len;
 
@@ -774,14 +774,14 @@ static void PF_trace_entity(void) {
     pr_global_struct->trace_fraction = 1.0f;
     return;
   }
-  plane.n = mygl_v3scale(plane.n, -1.0f);
+  plane.n = v3scale(plane.n, -1.0f);
   plane.dist *= -1.0f;
 
   ray = transform_ray(&transform, &ray, WorldSpace);
   plane = transform_plane(&transform, plane, WorldSpace);
 
-  v3copy(pr_global_struct->trace_endpos, ray.e.f3);
-  v3copy(pr_global_struct->trace_plane_normal, plane.n.f3);
+  v3copy(pr_global_struct->trace_endpos, ray.e.xyz);
+  v3copy(pr_global_struct->trace_plane_normal, plane.n.xyz);
   pr_global_struct->trace_plane_dist = plane.dist;
   pr_global_struct->trace_ent = EDICT_TO_PROG(ent);
   pr_global_struct->trace_fraction = ray.len / len;
@@ -1722,7 +1722,7 @@ static builtin_t pr_builtin[] = { PF_Fixme,
 
     //FXR
     PF_trace_entity,	//60
-    PF_Fixme, PF_Fixme, PF_Fixme, PF_Fixme, PF_Fixme, PF_Fixme,
+    PF_Fixme, PF_Fixme, PF_Fixme, PF_Fixme, PF_Fixme, SV_MoveToGoal2,
 
     SV_MoveToGoal, PF_precache_file, PF_makestatic,
 
