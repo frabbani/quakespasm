@@ -33,7 +33,7 @@ typedef enum {
   NN_sigmoid = 0,
   NN_tanh,
   NN_relu,
-  NN_leakyrelu,
+  NN_leakyrelu
 } NN_activation_type_t;
 
 typedef struct {

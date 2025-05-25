@@ -691,8 +691,8 @@ static void PF_trace_entity(void) {
   v1 = G_VECTOR(OFS_PARM1);
   v2 = G_VECTOR(OFS_PARM2);
 
-  vec3 p1 = TOVEC3(v1);
-  vec3 p2 = TOVEC3(v2);
+  vec3 p1 = V3(v1);
+  vec3 p2 = V3(v2);
 
   /* FIXME FIXME FIXME: Why do we hit this with certain progs.dat ?? */
   if (developer.value) {
@@ -731,7 +731,7 @@ static void PF_trace_entity(void) {
 
   aliashdr_t *hdr = (aliashdr_t*) Mod_Extradata(mod);
   colltri_t *tris = (colltri_t*) ((intptr_t) hdr + hdr->colltris);
-  Transform transform = make_transform(TOVEC3(ent->v.origin), TOVEC3(ent->v.angles));
+  Transform transform = make_transform(V3(ent->v.origin), V3(ent->v.angles));
 
   int32 frame = (int32) ent->v.frame;
   int32 pose = hdr->frames[frame].firstpose;

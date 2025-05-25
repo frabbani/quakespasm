@@ -30,7 +30,7 @@
 #include "q_stdinc.h"
 #include "vecn.h"
 
-#define TOVEC3(v) v3set(v[0], v[1], v[2])
+#define V3(v) v3set(v[0], v[1], v[2])
 
 #ifndef M_PI
 #define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h

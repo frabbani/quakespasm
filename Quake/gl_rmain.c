@@ -436,26 +436,26 @@ void R_SetupGL(void) {
   //GL_SetFrustum(r_fovx, r_fovy);  //johnfitz -- use r_fov* vars
 
   float aspect = (float) glwidth / (float) glheight;
-  mygl_mat4 P = mygl_m4persp(aspect, r_fovx * M_PI_DIV_180, 0.1f, 3000.0f);
+  MyGL_Mat4 P = MyGL_mat4Perspective(aspect, r_fovx * M_PI_DIV_180, 0.1f, 3000.0f);
   glLoadTransposeMatrixf(P.f16);
 
   //glCullFace(GL_BACK);   //johnfitz -- glquake used CCW with backwards culling -- let's do it right
 
   glMatrixMode( GL_MODELVIEW);
 
-  mygl_vec3 p, r, l, u;
-  p = mygl_v3(r_refdef.vieworg[0], r_refdef.vieworg[1], r_refdef.vieworg[2]);
-  l = mygl_v3x();
-  u = mygl_v3z();
-  r = mygl_v3cross(l, u);
+  MyGL_Vec3 p, r, l, u;
+  p = MyGL_vec3(r_refdef.vieworg[0], r_refdef.vieworg[1], r_refdef.vieworg[2]);
+  l = MyGL_vec3X;
+  u = MyGL_vec3Z;
+  r = MyGL_vec3Cross(l, u);
 
-  l = mygl_v3rot(l, u, r_refdef.viewangles[YAW] * M_PI_DIV_180);
-  r = mygl_v3rot(r, u, r_refdef.viewangles[YAW] * M_PI_DIV_180);
+  l = MyGL_vec3Rotate(l, u, r_refdef.viewangles[YAW] * M_PI_DIV_180);
+  r = MyGL_vec3Rotate(r, u, r_refdef.viewangles[YAW] * M_PI_DIV_180);
 
-  l = mygl_v3rot(l, r, -(r_refdef.viewangles[PITCH] + 0.0f) * M_PI_DIV_180);
-  u = mygl_v3rot(u, r, -(r_refdef.viewangles[PITCH] + 0.0f) * M_PI_DIV_180);
+  l = MyGL_vec3Rotate(l, r, -(r_refdef.viewangles[PITCH] + 0.0f) * M_PI_DIV_180);
+  u = MyGL_vec3Rotate(u, r, -(r_refdef.viewangles[PITCH] + 0.0f) * M_PI_DIV_180);
 
-  mygl_mat4 V = mygl_m4view(p, r, l, u);
+  MyGL_Mat4 V = MyGL_mat4View(p, r, l, u);
   // glLoadIdentity();
   // glRotatef(90, 1, 0, 0);	    // put Z going up
   // glRotatef(90, 0, 0, 1);	    // put Z going up
