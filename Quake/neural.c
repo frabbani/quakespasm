@@ -262,9 +262,15 @@ void NN_backward_propagate(NN_neural_network_t *nn) {
 
 }
 
-void NN_train_neural_network(NN_neural_network_t *nn) {
+double NN_train_neural_network(NN_neural_network_t *nn) {
   NN_forward_propagate(nn);
   NN_backward_propagate(nn);
+  double mse = 0.0f;
+  for (int j = 0; j < nn->output_size; j++) {
+    double delta = nn->prediction[j] - nn->target[j];
+    mse += delta * delta;
+  }
+  return mse / (double)nn->output_size;
 }
 
 void NN_export_neural_network(NN_neural_network_t *nn, const char *filename) {

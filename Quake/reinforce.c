@@ -123,6 +123,14 @@ void RL_step(RL_agent_t agent) {
   ctx->set(ctx->agent, &nn->input[2]);
 
   NN_forward_propagate(nn);
+  double mse = 0.0f;
+  for (int j = 0; j < nn->output_size; j++) {
+    double delta = nn->prediction[j] - nn->target[j];
+    mse += delta * delta;
+  }
+  mse /= (double) nn->output_size;
+  printf("MSE: %lf\n", mse);
+
   for (int i = 0; i < ctx->qcount; i++) {
     ctx->qs[NEXT_QS][i] = nn->output_layer.neurons[i].value;
   }

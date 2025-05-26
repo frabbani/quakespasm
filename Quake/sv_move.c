@@ -428,23 +428,34 @@ static float piecewise_falloff(float v, float a, float b, float c) {
   return 0.0f;
 }
 
-float SV_Proximity(edict_t *ent, vec3 e, float a, float b, float c) {
+#define OBSTRUCTION_SCALE 8.0f
+
+qboolean SV_Obstructed(edict_t *ent, edict_t *goal, int facing, float dist, trace_t *trace) {
+  dist *= OBSTRUCTION_SCALE;
+  vec3 p = V3(ent->v.origin);
+  vec3 p2 = v3add(p, SV_movedir(facing, dist));
+  *trace = SV_Move(p.xyz, ent->v.mins, ent->v.maxs, p2.xyz, false, ent);
+  if (goal && trace->ent == goal) {
+    return false;
+  }
+  return !(trace->fraction == 1.0f && !trace->allsolid && !trace->startsolid);
+}
+
+float SV_Proximity(edict_t *ent, vec3 e, int facing, float a, float b, float c) {
+  // trace_t trace;
   vec3 p = V3(ent->v.origin);
   vec3 d = v3point(p, e);
   d.z = 0.0;
-  if (v3dot(d, d) < a * a)
+  float dist_sq = v3dot(d, d);
+  if (dist_sq < a * a)
     return 1.0;
-  return 3.0 * piecewise_falloff(v3mag(d), a, b, c);
-}
-
-qboolean SV_Obstructed(edict_t *ent, edict_t *goal, int facing, float dist) {
-  vec3 p = V3(ent->v.origin);
-  vec3 p2 = v3add(p, SV_movedir(facing, dist));
-  trace_t trace = SV_Move(p.xyz, ent->v.mins, ent->v.maxs, p2.xyz, false, ent);
-  if (trace.ent != goal) {
-    return !(trace.fraction == 1.0f && !trace.allsolid && !trace.startsolid);
-  }
-  return false;
+  float dist = sqrtf(dist_sq);
+  double distance_reward = piecewise_falloff(dist, a, b, c);
+  vec3 dnorm = v3scale(d, 1.0 / dist);
+  float facing_reward = v3dot(dnorm, SV_dirs[facing]);
+  facing_reward = CLAMP(0.0f, facing_reward, 1.0f);
+  // float obstructed_penalty = SV_Obstructed(ent, NULL, facing, 8.0, &trace);
+  return 0.8 * distance_reward + 0.5 * facing_reward;  // - 1.3 * obstructed_penalty;;
 }
 
 typedef struct {
@@ -463,45 +474,57 @@ AI_state_t ai;
 
 void AI_SetInput(RL_agent_state_t state, double *input) {
   AI_state_t *ai = state;
-
+  trace_t trace;
   vec3 mins = V3(sv.models[1]->mins);
   vec3 maxs = V3(sv.models[1]->maxs);
   vec3 o = v3scale(v3add(mins, maxs), 0.5);
+  vec3 s = v3sub(maxs, mins);
   double radius = v3mag(v3sub(maxs, o));
   double o_x = (double) o.x;
   double o_y = (double) o.y;
+  double s_x = 1.0 / s.x;
+  double s_y = 1.0 / s.y;
+
+  vec3 p = V3(ai->ent->v.origin);
+  vec3 d = v3point(p, V3(ai->goal->v.origin));
+  vec3 dnorm = v3norm(d);
+  vec3 c1 = v3point(p, ai->c1);
+  vec3 c2 = v3point(p, ai->c2);
+
+  double x = (double) d.x * (double) s_x;
+  double y = (double) d.y * (double) s_y;
 
   int i = 0;
-  input[i++] = ((double) ai->ent->v.origin[0] - o_x) / radius;
-  input[i++] = ((double) ai->ent->v.origin[1] - o_y) / radius;
-  input[i++] = ((double) ai->c1.x - o_x) / radius;
-  input[i++] = ((double) ai->c1.y - o_y) / radius;
-  input[i++] = ((double) ai->c2.x - o_x) / radius;
-  input[i++] = ((double) ai->c2.y - o_y) / radius;
-  input[i++] = ((double) ai->goal->v.origin[0] - o_x) / radius;
-  input[i++] = ((double) ai->goal->v.origin[1] - o_y) / radius;
+  input[i++] = (double) dnorm.x;
+  input[i++] = (double) dnorm.y;
+  input[i++] = sqrt(x * x + y * y);
+  input[i++] = (double) c1.x * s_x;
+  input[i++] = (double) c1.y * s_y;
+  input[i++] = (double) c2.x * s_x;
+  input[i++] = (double) c2.y * s_y;
   input[i++] = ai->goal->v.velocity[0] / 400.0;
   input[i++] = ai->goal->v.velocity[1] / 400.0;
   for (int j = 0; j < num_dirs; j++) {
-    input[i++] = (double) SV_Obstructed(ai->ent, ai->goal, ai->facing, ai->dist * 4.0);
+    input[i++] = (double) SV_Obstructed(ai->ent, ai->goal, ai->facing, ai->dist, &trace);
   }
 }
 
 double AI_Reward(RL_agent_state_t state) {
   AI_state_t *ai = state;
-  double near_reward = SV_Proximity(ai->ent, V3(ai->goal->v.origin), 20, 1000, 3000);
-  double hit_penalty = (double) SV_Obstructed(ai->ent, ai->goal, ai->facing, ai->dist * 4.0);
-  ai->reward = near_reward - hit_penalty;
+  trace_t trace;
+  double near_reward = SV_Proximity(ai->ent, V3(ai->goal->v.origin), ai->facing, 20, 1000, 3000);
+  double hit_penalty = (double) SV_Obstructed(ai->ent, ai->goal, ai->facing, ai->dist, &trace);
+  ai->reward = 0.3 * near_reward - 0.7 * hit_penalty;
   return ai->reward;
 }
 
-static float vectoyaw(vec3 v) {
-  if (v.x == 0.0f && v.y == 0.0f)
-    return 0.0f;
-
-  float yaw = (int) (atan2(v.y, v.x) * 180 / M_PI);
-  return anglemod(yaw);
-}
+//static float vectoyaw(vec3 v) {
+//  if (v.x == 0.0f && v.y == 0.0f)
+//    return 0.0f;
+//
+//  float yaw = (int) (atan2(v.y, v.x) * 180 / M_PI);
+//  return anglemod(yaw);
+//}
 
 void face_towards(float *actual_yaw, float yaw_speed, float ideal_yaw) {
 
@@ -541,14 +564,36 @@ void AI_Step(RL_agent_state_t state, int facing) {
   ai->facing = facing;
   float yaw = SV_angles[ai->facing];  //vectoyaw(SV_dirs[ai->facing]);
   e->ideal_yaw = yaw;
-  //face_towards(&e->angles[YAW], e->yaw_speed, e->ideal_yaw);
+//face_towards(&e->angles[YAW], e->yaw_speed, e->ideal_yaw);
   e->angles[YAW] = e->ideal_yaw;
 
-  static int c = 0;
-  c++;
-  if (!(c % 10))
-    Sys_Printf("%s: reward: %f\n", __FUNCTION__, ai->reward);
   SV_movestep(ai->ent, SV_movedir(facing, ai->dist).xyz, true);
+
+  MyGL_Color lidar[21 * 21];
+  for (int y = 0; y < 21; y++) {
+    for (int x = 0; x < 21; x++) {
+      lidar[y * 21 + x].r = 0;
+      lidar[y * 21 + x].g = 0;
+      lidar[y * 21 + x].b = 255;
+      lidar[y * 21 + x].a = 255;
+    }
+  }
+  int i = 10 * 21 + 10;
+  lidar[i].r = lidar[i].g = lidar[i].b = 240;
+
+  for (int i = 0; i < num_dirs; i++) {
+    vec3 p = V3(e->origin);
+    vec3 p2 = v3add(p, SV_movedir(i, ai->dist * 8));
+    trace_t trace;
+    SV_Obstructed(ai->ent, ai->goal, i, ai->dist, &trace);
+    vec2 d = v2scale(v2set(SV_dirs[i].x, SV_dirs[i].y), OBSTRUCTION_SCALE * trace.fraction);
+    d.x = 10 + CLAMP(-10.0f, d.x, +10.0f);
+    d.y = 10 + CLAMP(-10.0f, d.y, +10.0f);
+    int j = (int) d.y * 21 + (int) d.x;
+    lidar[j].r = 255;
+    lidar[j].b = 0;
+  }
+  Image_WriteBMP("lidar.bmp", (void*) lidar, 21, 21, 32, false);
 }
 
 void SV_InitAI() {
@@ -564,21 +609,20 @@ void SV_InitAI() {
   }
 
   int input_size = 0;
-  input_size += 2;  // location
-  input_size += 2;  // c1 ewma
-  input_size += 2;  // c2 ewma
-  input_size += 2;  // target location
+  input_size += 3;  // target vector plus length to target
+  input_size += 2;  // ewma 1
+  input_size += 2;  // ewma 2
   input_size += 2;  // target velocity
   for (int i = 0; i < num_dirs; i++)
     input_size++;  //can reach direction
 
   NN_info_t info;
   info.activation = NN_tanh;
-  info.learning_rate = 0.125;
+  info.learning_rate = 0.1;
   info.l2_decay = 0.0002;
   info.hidden_layers_size = 2;
-  info.neurons_per[0] = 90;
-  info.neurons_per[1] = 90;
+  info.neurons_per[0] = 60;
+  info.neurons_per[1] = 30;
   info.input_size = input_size;
   info.output_size = num_dirs;
   Sys_Printf("%s: input size: %d\n", __FUNCTION__, info.input_size);
@@ -587,7 +631,7 @@ void SV_InitAI() {
   if (AI_inited) {
     RL_term(&ai.agent);
   }
-  ai.agent = RL_init(RL_sarsa, 0.4, 0.01, 0.7, &info, AI_SetInput, AI_Reward, AI_Step, &ai);
+  ai.agent = RL_init(RL_sarsa, 0.4, 0.03, 0.7, &info, AI_SetInput, AI_Reward, AI_Step, &ai);
 
 }
 
@@ -630,4 +674,5 @@ void SV_MoveToGoal2(void) {
   ai.c2 = V3(u2);
   ai.dist = dist;
   RL_step(ai.agent);
+  RL_export_neural_network(ai.agent, "nn.txt");
 }

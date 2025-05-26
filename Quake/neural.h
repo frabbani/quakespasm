@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#define NN_MAX_NEURONS 128
+#define NN_MAX_NEURONS 256
 #define NN_MAX_HIDDEN_LAYERS  8
 
 typedef struct {
@@ -65,7 +65,7 @@ void NN_export_neural_network(NN_neural_network_t *nn, const char *filename);
 void NN_import_neural_network(NN_neural_network_t **nn, const char *filename);
 void NN_forward_propagate(NN_neural_network_t *nn);
 void NN_backward_propagate(NN_neural_network_t *nn);
-void NN_train_neural_network(NN_neural_network_t *nn);
+double NN_train_neural_network(NN_neural_network_t *nn);
 
 #ifdef __cplusplus
 }
