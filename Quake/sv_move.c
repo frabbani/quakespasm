@@ -535,30 +535,7 @@ double AI_Reward(RL_agent_state_t state) {
   AI_state_t *ai = state;
   ai->reward = SV_Proximity(ai->ent, V3(ai->goal->v.origin), ai->facing, 20, 500, 3000);
   return ai->reward;
-
-  //  double x = sv.models[1]->maxs[0] - sv.models[1]->mins[0];
-//  double y = sv.models[1]->maxs[1] - sv.models[1]->mins[1];
-//  x *= 0.25;
-//  y *= 0.25;
-//
-//  vec3 r = v3point(V3(ai->ent->v.origin), V3(ai->goal->v.origin));
-//  vec2 v = v2set(SV_dirs[ai->facing].x, SV_dirs[ai->facing].y);
-//  vec2 d = v2set(r.x, r.y);
-//  vec2 dnorm = v2norm(d);
-//  double proximity = 1.0 - v2dot(d, d) / (x * x + y * y);
-//  double facing = v2dot(v, dnorm);
-//  facing = CLAMP(0.0, facing, 1.0);
-//  double obstruct = (double) SV_Obstructed(ai->ent, ai->goal, ai->facing, ai->dist, &trace);
-//  return facing + 0.3 * proximity - 0.3 * obstruct;
 }
-
-//static float vectoyaw(vec3 v) {
-//  if (v.x == 0.0f && v.y == 0.0f)
-//    return 0.0f;
-//
-//  float yaw = (int) (atan2(v.y, v.x) * 180 / M_PI);
-//  return anglemod(yaw);
-//}
 
 void face_towards(float *actual_yaw, float yaw_speed, float ideal_yaw) {
 
@@ -596,7 +573,7 @@ void AI_Step(RL_agent_state_t state, int facing) {
     Sys_Printf("%s: close enough?\n", __FUNCTION__);
   }
   ai->facing = facing;
-  float yaw = SV_angles[ai->facing];  //vectoyaw(SV_dirs[ai->facing]);
+  float yaw = SV_angles[ai->facing];
   e->ideal_yaw = yaw;
 //face_towards(&e->angles[YAW], e->yaw_speed, e->ideal_yaw);
   e->angles[YAW] = e->ideal_yaw;
@@ -635,7 +612,7 @@ void SV_InitAI() {
   }
 
   int input_size = 0;
-  input_size += 2;  // target vector plus length to target
+  input_size += 2;  // target vector
   input_size += 3;  // facing + obstruct
   input_size += 2;  // ewma 1
   input_size += 2;  // ewma 2
