@@ -231,7 +231,7 @@ void SV_SpawnServer(const char *server);
 
 //FXR
 void SV_InitAI();
-void SV_MoveToGoal2(void);
+void SV_MoveAndLearn(void);
 
 #endif	/* _QUAKE_SERVER_H */
 

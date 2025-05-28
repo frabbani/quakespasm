@@ -1722,7 +1722,7 @@ static builtin_t pr_builtin[] = { PF_Fixme,
 
     //FXR
     PF_trace_entity,	//60
-    PF_Fixme, PF_Fixme, PF_Fixme, PF_Fixme, PF_Fixme, SV_MoveToGoal2,
+    PF_Fixme, PF_Fixme, PF_Fixme, PF_Fixme, PF_Fixme, SV_MoveAndLearn,
 
     SV_MoveToGoal, PF_precache_file, PF_makestatic,
 

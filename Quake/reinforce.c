@@ -98,11 +98,11 @@ static RL_action_t e_greedy(RL_ctx_t *ctx) {
 
 }
 
-void RL_step(RL_agent_t agent) {
+double RL_step(RL_agent_t agent) {
   RL_ctx_t *ctx = agent;
   NN_neural_network_t *nn = ctx->nn;
   if (!ctx->inited)
-    return;
+    return 0.0;
 
   ctx->nn->input[0] = (double) ctx->action.exploratory;
   ctx->nn->input[1] = (double) ctx->action.taken;
@@ -112,7 +112,7 @@ void RL_step(RL_agent_t agent) {
   for (int i = 0; i < ctx->qcount; i++) {
     ctx->qs[CURR_QS][i] = nn->output_layer.neurons[i].value;
   }
-  RL_action_t last_action = ctx->action;
+
   ctx->action = e_greedy(ctx);
 
   ctx->act(ctx->agent, ctx->action.taken);
@@ -129,7 +129,6 @@ void RL_step(RL_agent_t agent) {
     mse += delta * delta;
   }
   mse /= (double) nn->output_size;
-  printf("MSE: %lf\n", mse);
 
   for (int i = 0; i < ctx->qcount; i++) {
     ctx->qs[NEXT_QS][i] = nn->output_layer.neurons[i].value;
@@ -141,14 +140,14 @@ void RL_step(RL_agent_t agent) {
 
   if (RL_sarsa == ctx->type) {
     target = reward + ctx->gamma * ctx->qs[NEXT_QS][ctx->action.taken];  // SARSA
-    nn->target[ctx->action.taken] += ctx->alpha * (target - ctx->qs[CURR_QS][ctx->action.taken]);
   }
   if (RL_qlearn == ctx->type) {
-    target = reward + ctx->gamma * q_max(ctx, NEXT_QS);  //Q-Learning
-    nn->target[last_action.taken] += ctx->alpha * (target - ctx->qs[CURR_QS][last_action.taken]);
-
+    int best = q_max(ctx, NEXT_QS);
+    target = reward + ctx->gamma * ctx->qs[NEXT_QS][best];  // Q-Learning
   }
+  nn->target[ctx->action.taken] += ctx->alpha * (target - ctx->qs[CURR_QS][ctx->action.taken]);
   NN_backward_propagate(nn);
+  return mse;
 }
 
 void RL_term(RL_agent_t *agent_ptr) {
