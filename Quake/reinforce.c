@@ -50,6 +50,9 @@ RL_agent_t RL_init(RL_type_t type, double alpha, double epsilon, double gamma, c
   info.input_size += 2;  // action
   NN_init_neural_network(ctx->nn, &info);
 
+//  printf("%s: input size: %d\n", __FUNCTION__, ctx->nn->input_size);
+//  printf("%s: output size: %d\n", __FUNCTION__, ctx->nn->output_size);
+
   ctx->type = type;
   ctx->alpha = alpha;
   ctx->epsilon = epsilon;

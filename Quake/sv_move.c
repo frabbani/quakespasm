@@ -429,7 +429,7 @@ static double piecewise_falloff(double v, double a, double b, double c) {
 }
 
 #define LEDGE_SCALE 1.25f
-#define OBSTRUCTION_SCALE 1.25f
+#define OBSTRUCTION_SCALE 5.0f
 
 qboolean SV_CheckLedge(edict_t *ent, int facing, float dist) {
   trace_t trace;
@@ -440,29 +440,27 @@ qboolean SV_CheckLedge(edict_t *ent, int facing, float dist) {
 //  VectorCopy(p.xyz, ent->v.origin);
 //  return !check;
   vec3 p, g;
-  float radius = ent->v.maxs[0] - ent->v.mins[0];
+  float radius = (ent->v.maxs[0] - ent->v.mins[0]) * 0.5f;
   p = v3add(V3(ent->v.origin), SV_movedir(facing, dist + radius));
   g = p;
-  g.z -= (ent->v.mins[2] + 2.0 * STEPSIZE);
+  g.z -= (ent->v.mins[2] + 4.0 * STEPSIZE);
 
   trace = SV_Move(p.xyz, vec3_origin, vec3_origin, g.xyz, MOVE_NOMONSTERS, ent);
   return (trace.fraction == 1.0f && !trace.startsolid && !trace.allsolid);
 }
 
 qboolean SV_Obstructed(edict_t *ent, edict_t *goal, int facing, float dist, trace_t *trace) {
+  if (SV_CheckLedge(ent, facing, dist)) {
+    trace->fraction = 0.0;
+    return true;
+  }
+
   vec3 p = V3(ent->v.origin);
   vec3 p2 = v3add(p, SV_movedir(facing, dist * OBSTRUCTION_SCALE));
   *trace = SV_Move(p.xyz, ent->v.mins, ent->v.maxs, p2.xyz, MOVE_NORMAL, ent);
   if (goal && trace->ent == goal)
     return false;
-  qboolean not = (trace->fraction == 1.0f && !trace->allsolid && !trace->startsolid);
-//  if (not) {
-//    if (SV_CheckLedge(ent, facing, dist * LEDGE_SCALE)) {
-//      trace->fraction = 0.0;
-//      return true;
-//    }
-//  }
-  return not;
+  return !(trace->fraction == 1.0f && !trace->allsolid && !trace->startsolid);
 }
 
 float SV_Proximity(edict_t *ent, vec3 e, int facing, float a, float b, float c) {
@@ -480,9 +478,10 @@ float SV_Proximity(edict_t *ent, vec3 e, int facing, float a, float b, float c) 
   double facing_reward = (double) v3dot(dnorm, SV_dirs[facing]);
   facing_reward = CLAMP(0.0, facing_reward, 1.0);
 
-  double obstructed_penalty = (double) SV_Obstructed(ent, NULL, facing, 16.0, &trace);
+  SV_Obstructed(ent, NULL, facing, 16.0, &trace);
+  double obstructed_penalty = 1.0 - trace.fraction;
 
-  return distance_reward + 0.5 * facing_reward - 0.3 * obstructed_penalty;
+  return distance_reward + 0.5 * facing_reward - 0.8 * obstructed_penalty;
 }
 
 typedef struct {
@@ -505,9 +504,9 @@ void AI_SetInput(RL_agent_state_t state, double *input) {
   trace_t trace;
   vec3 mins = V3(sv.models[1]->mins);
   vec3 maxs = V3(sv.models[1]->maxs);
-  vec3 s = v3sub(maxs, mins);
-  double s_x = 1.0 / s.x;
-  double s_y = 1.0 / s.y;
+  vec3 r = v3sub(maxs, mins);
+  double s_x = 1.0 / r.x;
+  double s_y = 1.0 / r.y;
   vec3 p = V3(ai->ent->v.origin);
   vec3 e = V3(ai->goal->v.origin);
   vec3 d = v3point(p, e);
@@ -519,7 +518,8 @@ void AI_SetInput(RL_agent_state_t state, double *input) {
   input[i++] = (double) d.y * s_y;
   input[i++] = SV_dirs[ai->facing].x;
   input[i++] = SV_dirs[ai->facing].y;
-  input[i++] = SV_Obstructed(ai->ent, ai->goal, ai->facing, ai->dist, &trace);
+  SV_Obstructed(ai->ent, ai->goal, ai->facing, ai->dist, &trace);
+  input[i++] = trace.fraction;
   input[i++] = (double) c1.x * s_x;
   input[i++] = (double) c1.y * s_y;
   input[i++] = (double) c2.x * s_x;
@@ -527,7 +527,8 @@ void AI_SetInput(RL_agent_state_t state, double *input) {
   for (int j = 0; j < num_dirs; j++) {
     input[i++] = SV_dirs[j].x;
     input[i++] = SV_dirs[j].y;
-    input[i++] = SV_Obstructed(ai->ent, ai->goal, j, ai->dist, &trace);
+    SV_Obstructed(ai->ent, ai->goal, j, ai->dist, &trace);
+    input[i++] = trace.fraction;
   }
 }
 
@@ -579,24 +580,23 @@ void AI_Step(RL_agent_state_t state, int facing) {
   e->angles[YAW] = e->ideal_yaw;
 
   SV_movestep(ai->ent, SV_movedir(facing, ai->dist).xyz, true);
+  for (int y = 0; y < LIDAR_H; y++)
+    for (int x = 0; x < LIDAR_W; x++)
+      lidar_buffer[y * LIDAR_W + x] = 0xffff0000;
+  lidar_buffer[(LIDAR_H / 2) * LIDAR_W + (LIDAR_W / 2)] = 0xffffffff;
 
-//  MyGL_Color lidar[21 * 21];
-//  for (int y = 0; y < 21; y++)
-//    for (int x = 0; x < 21; x++)
-//      lidar[y * 21 + x].value = 0xffff0000;
-//
-//  lidar[10 * 21 + 10].value = 0xffffffff;
-//
-//  for (int i = 0; i < num_dirs; i++) {
-//    trace_t trace;
-//    SV_Obstructed(ai->ent, NULL, i, 10.0f, &trace);
-//    vec2 d = v2scale(v2set(SV_dirs[i].x, SV_dirs[i].y), 10.0f * trace.fraction);
-//    d.x = 10 + CLAMP(-10.0f, d.x, +10.0f);
-//    d.y = 10 + CLAMP(-10.0f, d.y, +10.0f);
-//    int j = (int) d.y * 21 + (int) d.x;
-//    lidar[j].value = 0xff0000ff;
-//  }
-//  Image_WriteBMP("lidar.bmp", (void*) lidar, 21, 21, 32, false);
+  float half_w = (float) (int) (LIDAR_W / 2);
+  float half_h = (float) (int) (LIDAR_H / 2);
+  for (int i = 0; i < num_dirs; i++) {
+    trace_t trace;
+    SV_Obstructed(ai->ent, NULL, i, 16.0f, &trace);
+    vec2 d = v2scale(v2set(SV_dirs[i].x, SV_dirs[i].y), LIDAR_W / 2 * trace.fraction);
+    d.x = half_w + CLAMP(-half_w, d.x, +half_w);
+    d.y = half_h + CLAMP(-half_h, d.y, +half_h);
+    int j = (int) d.y * LIDAR_W + (int) d.x;
+    lidar_buffer[j] = 0xff0000ff;
+  }
+  //Image_WriteBMP("lidar.bmp", (void*) lidar_buffer, LIDAR_W, LIDAR_H, 32, false);
 }
 
 void SV_InitAI() {
@@ -620,22 +620,19 @@ void SV_InitAI() {
     input_size += 3;  //direction + obstruct
 
   NN_info_t info;
-  info.activation = NN_relu;
-  info.learning_rate = 0.1;
+  info.activation = NN_tanh;
+  info.learning_rate = 0.07;
   info.l2_decay = 0.0002;
   info.hidden_layers_size = 2;
   info.neurons_per[0] = 100;
   info.neurons_per[1] = 100;
   info.input_size = input_size;
   info.output_size = num_dirs;
-  Sys_Printf("%s: input size: %d\n", __FUNCTION__, info.input_size);
-  Sys_Printf("%s: output size: %d\n", __FUNCTION__, info.output_size);
-
   if (AI_inited) {
     RL_term(&ai.agent);
   }
   ai.agent = RL_init(RL_qlearn, 0.4, 0.1, 0.7, &info, AI_SetInput, AI_Reward, AI_Step, &ai);
-
+  AI_inited = true;
 }
 
 void SV_MoveAndLearn(void) {
@@ -658,7 +655,6 @@ void SV_MoveAndLearn(void) {
   if (goal != sv.edicts && SV_CloseEnough(ent, goal, dist)) {
     return;
   }
-
   ai.ent = ent;
   ai.goal = goal;
   ai.c1 = V3(u1);

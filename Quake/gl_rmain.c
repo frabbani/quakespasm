@@ -865,6 +865,55 @@ void R_DrawShadows(void) {
   }
 }
 
+void R_DrawLIDAR() {
+//  for (int i = 0; i < LIDAR_W * LIDAR_H; i++)
+//    lidar_buffer[i] = 0xffffffff;
+  MyGL_uploadTexture2D("LIDAR", MYGL_WRITE_RGBA, MYGL_READWRITE_BYTE, LIDAR_W, LIDAR_H, lidar_buffer);
+
+  mygl->material = MyGL_str64("Vertex Position and Texture Overlay");
+  mygl->W_matrix = MyGL_mat4Identity;
+  mygl->V_matrix = MyGL_mat4Identity;
+
+  float aspect = (float) glwidth / (float) glheight;
+  mygl->P_matrix = MyGL_mat4Ortho((uint32_t) (aspect * 5.0f), 5, 0.01f, 1000.0f);
+
+  mygl->samplers[0] = MyGL_str64("LIDAR");
+
+  mygl->primitive = MYGL_QUADS;
+  mygl->numPrimitives = 1;
+
+  MyGL_VertexAttributeStream vs = MyGL_vertexAttributeStream("Position");
+  MyGL_VertexAttributeStream ts = MyGL_vertexAttributeStream("UV0");
+
+  float x = -3.5f;
+  float y = 1.0f;
+  float z = +1.5f;
+  float w = 0.5f;
+  float h = 0.5f;
+
+  vs.arr.vec4s[0] = MyGL_vec4(x, y, z, 1.0f);
+  vs.arr.vec4s[1] = MyGL_vec4(x + w, y, z, 1.0f);
+  vs.arr.vec4s[2] = MyGL_vec4(x + w, y, z + h, 1.0f);
+  vs.arr.vec4s[3] = MyGL_vec4(x, y, z + h, 1.0f);
+
+  ts.arr.vec4s[0] = MyGL_vec4(0.0f, 0.0f, 0.0f, 0.0f);
+  ts.arr.vec4s[1] = MyGL_vec4(1.0f, 0.0f, 0.0f, 0.0f);
+  ts.arr.vec4s[2] = MyGL_vec4(1.0f, 1.0f, 0.0f, 0.0f);
+  ts.arr.vec4s[3] = MyGL_vec4(0.0f, 1.0f, 0.0f, 0.0f);
+
+  glEnable( GL_TEXTURE_2D);
+  MyGL_bindSampler(0);
+  MyGL_drawStreaming("Position, UV0");
+
+//  R_SetupGL();
+//  glColor3f(1, 1, 1);
+//  glEnable( GL_TEXTURE_2D);
+//  glEnable( GL_CULL_FACE);
+//  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
+//  GL_PolygonOffset( OFFSET_NONE);
+//  glEnable( GL_DEPTH_TEST);
+}
+
 /*
  ================
  R_RenderScene
@@ -885,6 +934,8 @@ void R_RenderScene(void) {
 
   R_DrawEntitiesOnList(false);  //johnfitz -- false means this is the pass for nonalpha entities
 
+  R_DrawLIDAR();
+
   R_DrawWorld_Water();  //johnfitz -- drawn here since they might have transparency
 
   R_DrawEntitiesOnList(true);  //johnfitz -- true means this is the pass for alpha entities
@@ -900,6 +951,7 @@ void R_RenderScene(void) {
   R_ShowTris();  //johnfitz
 
   R_ShowBoundingBoxes();  //johnfitz
+
 }
 
 static GLuint r_scaleview_texture;

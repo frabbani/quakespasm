@@ -325,5 +325,10 @@ extern qboolean isDedicated;
 
 extern int minimum_memory;
 
+//FXR
+#define LIDAR_W 21
+#define LIDAR_H 21
+extern uint32_t lidar_buffer[LIDAR_W * LIDAR_H];
+
 #endif	/* QUAKEDEFS_H */
 

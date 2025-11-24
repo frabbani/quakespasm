@@ -248,7 +248,7 @@ qmodel_t* Mod_FindName(const char *name) {
     if (mod_numknown == MAX_MOD_KNOWN)
       Sys_Error("mod_numknown == MAX_MOD_KNOWN");
     q_strlcpy(mod->name, name, MAX_QPATH);
-    Sys_Printf("Mod_FindName: find '%s'\n", mod->name);
+    //Sys_Printf("Mod_FindName: find '%s'\n", mod->name);
     mod->needload = true;
     mod_numknown++;
   }
@@ -2684,7 +2684,7 @@ void Mod_LoadAliasModel(qmodel_t *mod, void *buffer) {
 
   Hunk_FreeToLowMark(start);
 
-  Sys_Printf("%s - loaded model '%s'\n", __FUNCTION__, mod->name);
+  //Sys_Printf("%s - loaded model '%s'\n", __FUNCTION__, mod->name);
 }
 
 //=============================================================================
