@@ -1276,12 +1276,34 @@ static void GL_Init(void) {
   file_stream_init(&fs, "./shaders", "includes.glsl", 0);
   MyGL_loadShaderLibrary(file_stream_get_char, &fs, fs.file);
 
-  file_stream_init(&fs, "./shaders", "keyframe.shader", 0);
+  file_stream_init(&fs, "./shaders", "keyframe.shader", 1);
+  MyGL_loadShader(file_stream_get_char, &fs, fs.file);
+
+  file_stream_init(&fs, "./shaders", "textured.shader", 1);
+  MyGL_loadShader(file_stream_get_char, &fs, fs.file);
+
+  file_stream_init(&fs, "./shaders", "overlay.shader", 1);
   MyGL_loadShader(file_stream_get_char, &fs, fs.file);
 
   GLAlias_CreateShaders();
   GLWorld_CreateShaders();
   GL_ClearBufferBindings();
+
+  //FXR
+  for (int i = 0; i < LIDAR_W * LIDAR_H; i++)
+    lidar_buffer[i] = 0xff0000ff;
+
+  MyGL_Debug_setChatty(GL_TRUE);
+  MyGL_createEmptyTexture2D("LIDAR", LIDAR_W, LIDAR_H, "rgb10a2", GL_FALSE, GL_FALSE);
+  MyGL_uploadTexture2D("LIDAR", MYGL_WRITE_BGRA, MYGL_READWRITE_BYTE, LIDAR_W, LIDAR_H, lidar_buffer);
+
+  //MyGL_Image image;
+  //image.w = LIDAR_W;
+  //image.h = LIDAR_H;
+  //image.pixels = (void*) lidar_buffer;
+  //MyGL_createTexture2D("LIDAR", MYGL_ROIMAGE(image), "rgb10a2", GL_FALSE, GL_FALSE, GL_FALSE);
+
+  MyGL_Debug_setChatty(GL_FALSE);
 }
 
 /*

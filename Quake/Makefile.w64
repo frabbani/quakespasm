@@ -279,9 +279,13 @@ OBJS := strlcat.o \
 	pr_edict.o \
 	pr_exec.o \
 	sv_main.o \
+	mtwister.o \
+	neural.o \
+	reinforce.o \
 	sv_move.o \
 	sv_phys.o \
 	sv_user.o \
+	vecn.o \
 	world.o \
 	zone.o \
 	$(SYSOBJ_SYS) $(SYSOBJ_MAIN) $(SYSOBJ_RES)

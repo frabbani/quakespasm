@@ -602,19 +602,19 @@ void R_DrawAliasModel(entity_t *e) {
 
   glPushMatrix();
 
-  mygl_vec3 p, r, l, u;
-  p = mygl_v3(lerpdata.origin[0], lerpdata.origin[1], lerpdata.origin[2]);
+  MyGL_Vec3 p, r, l, u;
+  p = MyGL_vec3(lerpdata.origin[0], lerpdata.origin[1], lerpdata.origin[2]);
 
-  l = mygl_v3x();
-  u = mygl_v3z();
-  r = mygl_v3y();  //inverted for RHS
-  l = mygl_v3rot(l, u, (lerpdata.angles[YAW]) * M_PI_DIV_180);
-  r = mygl_v3rot(r, u, (lerpdata.angles[YAW]) * M_PI_DIV_180);
-  l = mygl_v3rot(l, r, (-lerpdata.angles[PITCH]) * M_PI_DIV_180);
-  u = mygl_v3rot(u, r, (-lerpdata.angles[PITCH]) * M_PI_DIV_180);
+  l = MyGL_vec3X;
+  u = MyGL_vec3Z;
+  r = MyGL_vec3Y;  //inverted for RHS
+  l = MyGL_vec3Rotate(l, u, (lerpdata.angles[YAW]) * M_PI_DIV_180);
+  r = MyGL_vec3Rotate(r, u, (lerpdata.angles[YAW]) * M_PI_DIV_180);
+  l = MyGL_vec3Rotate(l, r, (-lerpdata.angles[PITCH]) * M_PI_DIV_180);
+  u = MyGL_vec3Rotate(u, r, (-lerpdata.angles[PITCH]) * M_PI_DIV_180);
 
-  mygl_mat4 W = mygl_m4world(p, l, r, u);
-  mygl_mat4 T = mygl_m4ident();
+  MyGL_Mat4 W = MyGL_mat4World(p, l, r, u);
+  MyGL_Mat4 T = MyGL_mat4Identity;
 
   // decode MDL vertices
   T.e00 = paliashdr->scale[0];
@@ -624,7 +624,7 @@ void R_DrawAliasModel(entity_t *e) {
   T.e13 = paliashdr->scale_origin[1] * fovscale;
   T.e23 = paliashdr->scale_origin[2] * fovscale;
 
-  glMultTransposeMatrixf(mygl_m4mul(W, T).f16);
+  glMultTransposeMatrixf(MyGL_mat4Multiply(W, T).f16);
 
   //R_RotateForEntity(lerpdata.origin, lerpdata.angles);
   //glTranslatef(paliashdr->scale_origin[0], paliashdr->scale_origin[1] * fovscale, paliashdr->scale_origin[2] * fovscale);

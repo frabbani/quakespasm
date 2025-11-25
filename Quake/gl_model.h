@@ -465,7 +465,7 @@ typedef struct qmodel_s {
 //
 // alias model
 //
-  mygl_str64 mygl_archive;
+  MyGL_Str64 mygl_archive;
 
   GLuint meshvbo;
   GLuint meshindexesvbo;
